@@ -1,3 +1,5 @@
+"use server";
+
 import { b as baml } from "@/lib/baml_client/baml_client";
 import { EventAppConfig } from "@/lib/baml_client/baml_client/types";
 import { rhizClient } from "@/lib/rhizClient";
