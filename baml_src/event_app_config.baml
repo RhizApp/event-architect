@@ -69,6 +69,7 @@ function GenerateEventAppConfig(
     - If goals include "networking" or "dealflow", enable matchmaking and relationship features.
     - If tone is "professional", use subdued colors. If "vibrant", use bold colors.
     - Ensure at least one relationship feature is enabled.
-    - Return a valid JSON object matching the EventAppConfig schema.
+    
+    {{ ctx.output_format }}
   "#
 }

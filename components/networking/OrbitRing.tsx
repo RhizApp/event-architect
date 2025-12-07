@@ -9,6 +9,7 @@ interface OrbitRingProps {
   duration?: number; // Seconds for a full wobble/rotation cycle
   direction?: "clockwise" | "counter-clockwise";
   eccentricity?: number; // 0 to 1, where 0 is perfect circle
+  variant?: "sway" | "continuous";
   className?: string;
   children?: React.ReactNode;
   delay?: number;
@@ -19,17 +20,39 @@ export const OrbitRing: React.FC<OrbitRingProps> = ({
   duration = 20,
   direction = "clockwise",
   eccentricity = 0.1, // Slight oval
+  variant = "sway",
   className,
   children,
   delay = 0,
 }) => {
   // Calculate dimensions based on radius and eccentricity
-  // If eccentricity is 0.1, the height is 90% of width
   const width = radius * 2;
   const height = width * (1 - eccentricity);
 
-  const rotateValues =
-    direction === "clockwise" ? [0, 15, 0] : [0, -15, 0];
+  // Animation variants
+  const animations = {
+    sway: {
+      rotate: direction === "clockwise" ? [0, 15, 0] : [0, -15, 0],
+      transition: {
+        duration: duration,
+        repeat: Infinity,
+        repeatType: "reverse" as const, // TS fix: Explicitly cast literal
+        ease: "easeInOut",
+        delay: delay,
+      }
+    },
+    continuous: {
+      rotate: direction === "clockwise" ? 360 : -360,
+      transition: {
+        duration: duration,
+        repeat: Infinity,
+        ease: "linear",
+        delay: delay,
+      }
+    }
+  };
+
+  const currentAnim = animations[variant];
 
   return (
     <div
@@ -51,17 +74,8 @@ export const OrbitRing: React.FC<OrbitRingProps> = ({
       {/* The Container that rotates/sways */}
       <motion.div
         className="absolute inset-0 rounded-full"
-        animate={{
-          rotate: rotateValues,
-  
-        }}
-        transition={{
-          duration: duration,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut", // Gentle sway
-          delay: delay,
-        }}
+        animate={{ rotate: currentAnim.rotate }}
+        transition={currentAnim.transition}
       >
         {children}
       </motion.div>

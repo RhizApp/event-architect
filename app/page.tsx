@@ -8,11 +8,18 @@ import { EventLandingPage } from "./components/EventLandingPage";
 export default function Home() {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<EventAppConfig | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (formData: FormData) => {
+    setError(null);
     startTransition(async () => {
-      const config = await generateEventConfig(formData);
-      setResult(config);
+      try {
+        const config = await generateEventConfig(formData);
+        setResult(config);
+      } catch (e) {
+        console.error("Submission error:", e);
+        setError("Failed to generate event configuration. Please try again.");
+      }
     });
   };
 
@@ -35,101 +42,165 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-8 font-sans">
-      <main className="max-w-4xl mx-auto space-y-12">
-        <header className="text-center space-y-4">
-          <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Rhiz Event Maker
-          </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Design your event&apos;s digital experience powered by Rhiz Protocol.
-          </p>
+    <div className="min-h-screen bg-surface-950 text-foreground font-sans selection:bg-brand-500/30">
+      <main className="max-w-7xl mx-auto px-6 py-24 lg:flex lg:items-start lg:gap-24">
+        {/* Cinematic Header */}
+        <header className="lg:w-1/3 space-y-8 sticky top-24 self-start animate-fade-in">
+          <div className="space-y-4">
+            <h1 className="text-6xl md:text-7xl font-heading font-bold tracking-tighter text-white leading-[0.9]">
+              Event <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-brand-500">
+                Architect
+              </span>
+            </h1>
+            <p className="text-lg text-surface-400 font-light max-w-sm leading-relaxed">
+              Design intelligent, identity-aware event experiences powered by Rhiz Protocol.
+              Define the soul of your gathering in seconds.
+            </p>
+          </div>
+          
+          <div className="pt-8 border-t border-surface-800">
+            <div className="flex items-center gap-4 text-surface-500 text-xs tracking-widest uppercase mb-4">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              System Status: Active
+            </div>
+          </div>
         </header>
 
-        <div className="max-w-xl mx-auto">
-          {/* Input Form */}
-          <section className="space-y-6 bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
-            <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
-              Create New Event
-            </h2>
-            <form action={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Event Basics
+        {/* Configuration Cockpit */}
+        <div className="lg:w-2/3 mt-16 lg:mt-0 animate-slide-up" style={{ animationDelay: "200ms" }}>
+          <section className="bg-surface-900/50 backdrop-blur-xl border border-surface-800 rounded-3xl p-8 md:p-12 shadow-2xl ring-1 ring-white/5">
+            <div className="mb-10 flex items-center justify-between">
+              <h2 className="text-2xl font-heading font-semibold text-white tracking-tight">
+                Configuration Parameters
+              </h2>
+              <span className="text-xs font-mono text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
+                v2.0.0
+              </span>
+            </div>
+
+            <form action={handleSubmit} className="space-y-10">
+              
+              {/* Event Essence */}
+              <div className="space-y-4 group">
+                <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+                  01 // Event Essence
                 </label>
                 <textarea
                   name="eventBasics"
-                  placeholder="e.g. A 2-day tech conference in SF for 500 founders"
-                  className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
-                  rows={3}
+                  placeholder="Describe your event... e.g. 'A high-energy hackathon in Tokyo for 200 crypto-natives looking to build the future of privacy.'"
+                  className="w-full bg-surface-950 border-0 border-b-2 border-surface-800 focus:border-brand-500 text-2xl md:text-3xl font-light text-white placeholder-surface-700 py-4 px-0 resize-none outline-none transition-all focus:ring-0 min-h-[160px] leading-tight"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Goals (comma separated)
-                </label>
-                <input
-                  name="goals"
-                  placeholder="Networking, Dealflow, Learning"
-                  className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                  required
-                />
-              </div>
+              {error && (
+                <div className="p-4 bg-red-900/20 text-red-400 rounded-lg text-sm border border-red-500/20 flex items-center gap-3">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  {error}
+                </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Audience
+              <div className="grid md:grid-cols-2 gap-12">
+                {/* Strategic Goals */}
+                <div className="space-y-4 group">
+                  <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+                    02 // Strategic Goals
+                  </label>
+                  <input
+                    name="goals"
+                    placeholder="Networking, Dealflow..."
+                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
+                    required
+                  />
+                  <p className="text-xs text-surface-500">Comma separated objectives</p>
+                </div>
+
+                {/* Target Audience */}
+                <div className="space-y-4 group">
+                  <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+                    03 // Audience Profile
                   </label>
                   <input
                     name="audience"
-                    placeholder="Founders, VCs"
-                    className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm"
+                    placeholder="Founders, VCs, Builders..."
+                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                    Tone
+              </div>
+
+              {/* Vibe & Connection */}
+              <div className="grid md:grid-cols-2 gap-8 pt-4">
+                <div className="space-y-3">
+                  <label className="text-xs font-mono text-surface-500 uppercase tracking-widest">
+                    Atmosphere
                   </label>
-                  <select
-                    name="tone"
-                    className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm"
-                  >
-                    <option value="professional">Professional</option>
-                    <option value="vibrant">Vibrant</option>
-                    <option value="casual">Casual</option>
-                    <option value="luxury">Luxury</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      name="tone"
+                      className="w-full appearance-none bg-surface-800/50 hover:bg-surface-800 text-white rounded-xl px-6 py-4 outline-none border border-surface-700 focus:border-brand-500 transition-all cursor-pointer text-lg font-medium"
+                    >
+                      <option value="professional">Professional & Crisp</option>
+                      <option value="vibrant">Vibrant & Electric</option>
+                      <option value="casual">Casual & Organic</option>
+                      <option value="luxury">Luxury & Exclusive</option>
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400">
+                      ↓
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs font-mono text-surface-500 uppercase tracking-widest">
+                    Connection Density
+                  </label>
+                  <div className="relative">
+                    <select
+                      name="relationshipIntent"
+                      className="w-full appearance-none bg-surface-800/50 hover:bg-surface-800 text-white rounded-xl px-6 py-4 outline-none border border-surface-700 focus:border-brand-500 transition-all cursor-pointer text-lg font-medium"
+                    >
+                      <option value="high">Active Matchmaking</option>
+                      <option value="medium">Organic Networking</option>
+                      <option value="low">Content Focused</option>
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400">
+                      ↓
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Relationship Intent
-                </label>
-                <select
-                    name="relationshipIntent"
-                    className="w-full p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-sm"
-                  >
-                    <option value="high">High (Active Matchmaking)</option>
-                    <option value="medium">Medium (Organic Networking)</option>
-                    <option value="low">Low (Content Focused)</option>
-                  </select>
-              </div>
-
+              {/* Hidden Fields for Defaults */}
               <input type="hidden" name="sessionShape" value="standard" />
               <input type="hidden" name="matchmakingAppetite" value="high" />
               <input type="hidden" name="tools" value="standard" />
 
-              <button
-                type="submit"
-                disabled={isPending}
-                className="w-full py-4 px-4 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-lg font-bold hover:opacity-90 transition-opacity disabled:opacity-50 mt-4"
-              >
-                {isPending ? "Generating Event Experience..." : "Design Event"}
-              </button>
+              <div className="pt-8">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="group relative w-full py-6 bg-white hover:bg-brand-50 rounded-2xl text-black font-heading font-bold text-xl tracking-tight transition-all transform hover:scale-[1.01] hover:shadow-2xl hover:shadow-white/20 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-3">
+                    {isPending ? (
+                      <>
+                        <span className="animate-spin text-2xl">✺</span>
+                        Initializing Event Protocol...
+                      </>
+                    ) : (
+                      <>
+                        Generate Event Experience
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </>
+                    )}
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                </button>
+                <p className="text-center text-surface-500 text-xs mt-4">
+                  Powered by Rhiz Intelligence • Generates configuration in ~15s
+                </p>
+              </div>
             </form>
           </section>
         </div>

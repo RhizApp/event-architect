@@ -31,7 +31,12 @@ export async function generateEventConfig(formData: FormData) {
     );
     return config;
   } catch (error: any) {
-    console.error("BAML Generation Error Details:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    console.error("BAML Generation Error Detailed:", {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause,
+      name: error.name
+    });
     // Check for specific error types if known, or just return the message
     throw new Error(`Failed to generate event configuration: ${error.message || "Unknown error"}`);
   }

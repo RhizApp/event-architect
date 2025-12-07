@@ -201,8 +201,8 @@ export const NetworkingPreview: React.FC<NetworkingProps> = ({
 
       {/* Orbit Rings - using 'pointer-events-none' on rings, but avatars should ideally be interactive if we add hover later */}
       
-      {/* Inner Ring */}
-      <OrbitRing radius={110} duration={25} direction="clockwise" eccentricity={0.05}>
+      {/* Inner Ring - Slow Orbit */}
+      <OrbitRing radius={110} duration={60} direction="clockwise" eccentricity={0.05} variant="continuous">
         {ring1.map((attendee, i) => (
           <AvatarNode 
             key={attendee.id} 
@@ -214,9 +214,9 @@ export const NetworkingPreview: React.FC<NetworkingProps> = ({
         ))}
       </OrbitRing>
 
-      {/* Outer Ring */}
+      {/* Outer Ring - Slower Reverse Orbit */}
       {ring2.length > 0 && (
-         <OrbitRing radius={170} duration={35} direction="counter-clockwise" eccentricity={0.08} delay={0.5}>
+         <OrbitRing radius={170} duration={80} direction="counter-clockwise" eccentricity={0.08} delay={0.5} variant="continuous">
             {ring2.map((attendee, i) => (
               <AvatarNode 
                 key={attendee.id} 
