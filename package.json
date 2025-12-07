@@ -9,11 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@boundaryml/baml": "^0.214.0",
     "@rewind-ui/core": "^0.20.0",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-query": "^5.90.12",
     "clsx": "^2.1.1",
+    "framer-motion": "^12.23.25",
     "lucide-react": "^0.556.0",
     "next": "16.0.7",
     "react": "19.2.0",

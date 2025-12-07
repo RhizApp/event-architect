@@ -1,0 +1,25 @@
+# Antigravity Rules: Optimal Context Engineering & Production
+Based on [HumanLayer's 12 Factor Agents](https://github.com/humanlayer/12-factor-agents)
+
+## Core Philosophy: Own Your Context Window
+"Context is everything you provide to the LLM. Context engineering is the art of maximizing the performance of today's models by optimizing this input."
+
+## Rules for Code Generation & Agent Behavior
+
+### 1. Context Construction (The "Context Engineering" Rule)
+When designing prompts or Agentic workflows within this project:
+- **Deconstruct the Context**: distinctly separate Instructions, Retrieved Data (RAG), Session History, Memory, and Output Structure.
+- **Do Not Rely on Defaults**: Do not assume standard "User: / Assistant:" formatting is sufficient for complex tasks. Use explicit delimiters (e.g., XML tags like `<context>`, `<instructions>`, `<memory>`) to help the model parse dense information.
+- **Flexibility**: Experiment with the *entire* context window. If a specific format works better (e.g., putting instructions *after* data), use it.
+
+### 2. Production Stability
+- **Statelessness**: Remember LLMs are stateless. Every request must contain all necessary "State" to be reliable.
+- **Deterministic Outputs**: heavily privilege techniques that force structured outputs (like Pydantic/Zod schemas or BAML) over free-form text to ensure production reliability (Factor 3 + General Best Practices).
+
+### 3. Agent Architecture (If building Agents)
+- **Control Plane Separation**: If building autonomous agents, separate the "Control Plane" (which schedules and persists state) from the "Agent" (the LLM loop). Reference `humanlayer/agentcontrolplane`.
+- **Human-in-the-Loop**: Design systems where the AI can *ask* for help. Do not fail silently; escalate ambiguity to a human layer.
+
+### 4. Implementation Guidelines
+- When writing prompts in code (e.g. in `lib/prompts.ts` or `baml_src`), apply these structuring principles.
+- Use explicit types for context data structures.

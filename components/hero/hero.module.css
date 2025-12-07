@@ -1,0 +1,149 @@
+/* hero.module.css */
+
+/* --- Animations --- */
+
+/* Custom cubic-bezier for "Cinematic" entrance */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(18px); /* 12-18px upward motion */
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animateEntrance {
+  /* Duration 450-650ms */
+  animation: slideUpFade 600ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  opacity: 0; /* Start hidden */
+}
+
+.delay100 {
+  animation-delay: 100ms;
+}
+
+.delay200 {
+  animation-delay: 200ms;
+}
+
+.delay300 {
+  animation-delay: 300ms;
+}
+
+/* --- Drift / Parallax --- */
+@keyframes slowDrift {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+.backgroundDrift {
+  animation: slowDrift 60s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+/* --- Noise Texture --- */
+.noiseOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.15; /* Low opacity for tactile depth */
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+/* --- Button Styles & Micro-interactions --- */
+
+.heroButton {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  isolation: isolate;
+}
+
+/* Professional: Neon Edge Pulse */
+.heroButton[data-theme='professional']::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: inherit;
+  filter: blur(8px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.heroButton[data-theme='professional']:hover::after {
+  opacity: 0.6;
+  animation: pulseNeon 1.5s infinite;
+}
+
+@keyframes pulseNeon {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.02); }
+}
+
+/* Vibrant: Sheen/Color Shift */
+.heroButton[data-theme='vibrant'] {
+  background-size: 200% 100%;
+  background-image: linear-gradient(90deg, currentColor 0%, #fff 50%, currentColor 100%); /* Simulating sheen with text color context - needs specific handling in JS usually, but here we act on BG */
+}
+
+/* For Vibrant we need a specific gradient on the background, handled in component style injection, but here is the sheen effect */
+.heroButton[data-theme='vibrant']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: none;
+}
+
+.heroButton[data-theme='vibrant']:hover::before {
+  animation: sheenSlide 0.8s forwards; /* Quick swipe */
+}
+
+@keyframes sheenSlide {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Luxury: Gold Specular Sweep */
+.heroButton[data-theme='luxury'] {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.heroButton[data-theme='luxury']:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(212, 175, 55, 0.2); 
+}
+
+.heroButton[data-theme='luxury']::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+    opacity: 0;
+    transform: rotate(45deg) translate(-100%, -100%);
+    transition: transform 0.6s ease, opacity 0.6s ease;
+    pointer-events: none;
+}
+
+.heroButton[data-theme='luxury']:hover::before {
+    opacity: 0.3;
+    transform: rotate(45deg) translate(0%, 0%);
+}

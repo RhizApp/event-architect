@@ -1,0 +1,188 @@
+/* schedule.module.css */
+
+/* --- Design Tokens --- */
+.container {
+    --track-main: #9333ea; /* Rich purple */
+    --track-main-bg: #2e1065;
+    --track-workshop: #d97706; /* Amber */
+    --track-workshop-bg: #451a03;
+    --track-networking: #059669; /* Emerald */
+    --track-networking-bg: #022c22;
+    
+    --surface-base: #18181b; /* Zinc 900 */
+    --surface-border: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Grid Layouts --- */
+.bentoGrid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
+  grid-auto-flow: row dense; /* Key for Bento packing */
+}
+
+@media (min-width: 768px) {
+  .bentoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .bentoGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* --- Card Architecture --- */
+.card {
+  position: relative;
+  background-color: var(--surface-base);
+  border: 1px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Custom easing */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px; /* Minimum height for presence */
+}
+
+/* Variable spans for Bento feel */
+.span2 {
+    grid-column: span 1;
+}
+@media (min-width: 1024px) {
+    .span2 {
+        grid-column: span 2;
+    }
+}
+
+/* --- Surfaces & Textures --- */
+
+/* Base Texture: Soft Grain */
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacit='1'/%3E%3C/svg%3E");
+    z-index: 0;
+}
+
+/* Track Themes */
+/* Main Stage: Deep Slate + Warm Grain */
+.card[data-track='Main Stage'] {
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+}
+.card[data-track='Main Stage']:hover {
+    border-color: rgba(147, 51, 234, 0.3);
+}
+
+/* Workshop: Technical Blueprint (Grid Pattern) */
+.card[data-track='Workshop'] {
+    background: #1c1917; /* Stone 900 */
+}
+.card[data-track='Workshop']::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: 0;
+    pointer-events: none;
+}
+.card[data-track='Workshop']:hover {
+    border-color: rgba(217, 119, 6, 0.3);
+}
+
+/* Networking: Dot Matrix */
+.card[data-track='Networking'] {
+    background: #0f172a; /* Slate 900 */
+}
+.card[data-track='Networking']::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(5, 150, 105, 0.1) 1px, transparent 1px);
+    background-size: 16px 16px;
+    z-index: 0;
+    pointer-events: none;
+}
+.card[data-track='Networking']:hover {
+    border-color: rgba(5, 150, 105, 0.3);
+}
+
+/* --- Interactions --- */
+
+/* Lift */
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 0 40px rgba(0,0,0,0.2) inset; /* Inner depth */
+}
+
+/* Micro-sheen on Hover */
+.shinyOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        120deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.05) 45%, 
+        transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.card:hover .shinyOverlay {
+    opacity: 1;
+}
+
+/* Title Shift */
+.cardTitle {
+    transition: transform 0.3s ease;
+}
+.card:hover .cardTitle {
+    transform: translateY(-1px);
+}
+
+/* --- Badge System --- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 10;
+}
+
+.badge[data-track='Main Stage'] {
+    background-color: rgba(147, 51, 234, 0.15);
+    color: #e9d5ff; /* Purple 200 */
+    border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.badge[data-track='Workshop'] {
+    background-color: rgba(217, 119, 6, 0.15);
+    color: #fde68a; /* Amber 200 */
+    border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.badge[data-track='Networking'] {
+    background-color: rgba(5, 150, 105, 0.15);
+    color: #a7f3d0; /* Emerald 200 */
+    border: 1px solid rgba(5, 150, 105, 0.3);
+}
