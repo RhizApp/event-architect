@@ -65,10 +65,10 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     preferred_name: attendee.name,
     imageFromUrl: attendee.imageUrl, 
     tags: attendee.interests,
-    // Add missing PersonRead required fields with defaults
-    emails: [],
     phones: [],
     social_handles: {},
+    handle: (attendee as any).handle,
+    did: (attendee as any).did,
   }));
 
   // Handle node interaction

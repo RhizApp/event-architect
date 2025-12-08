@@ -3,7 +3,9 @@
 import { b as baml } from "@/lib/baml_client/baml_client";
 import { EventAppConfig } from "@/lib/baml_client/baml_client/types";
 import { rhizClient } from "@/lib/rhizClient";
-import { Attendee } from "@/lib/types";
+import { Attendee } from "@/lib/types"; // Used for type reference if needed generally, but we removed its usage in function body. Actually, let's keep it if we might need it later or remove it to fix lint.
+// It is unused.
+import { Session } from "@/lib/types";
 import { 
   BAMLGenerationError, 
   ValidationError,
