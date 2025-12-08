@@ -37,7 +37,7 @@ export const OrbitRing: React.FC<OrbitRingProps> = ({
         duration: duration,
         repeat: Infinity,
         repeatType: "reverse" as const, // TS fix: Explicitly cast literal
-        ease: "easeInOut",
+        ease: "easeInOut" as const,
         delay: delay,
       }
     },
@@ -46,9 +46,9 @@ export const OrbitRing: React.FC<OrbitRingProps> = ({
       transition: {
         duration: duration,
         repeat: Infinity,
-        ease: "linear",
+        ease: "linear" as const,
         delay: delay,
-      } as any
+      }
     }
   };
 

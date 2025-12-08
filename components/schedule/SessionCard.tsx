@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import styles from './schedule.module.css';
 
 export interface Session {
@@ -44,9 +45,11 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
         {/* Speaker Line */}
         <div className="flex items-center gap-3 pt-4 border-t border-white/5">
           {speaker.avatar && (
-            <img 
+            <Image
               src={speaker.avatar} 
-              alt={speaker.name} 
+              alt={speaker.name}
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full object-cover ring-2 ring-white/10"
             />
           )}

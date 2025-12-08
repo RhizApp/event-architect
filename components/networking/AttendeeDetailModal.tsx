@@ -2,7 +2,8 @@
 
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, User, Share2, MessageCircle } from "lucide-react";
+import { X, User, MessageCircle } from "lucide-react";
+import Image from "next/image";
 import { GraphAttendee } from "@/lib/types";
 
 interface AttendeeDetailModalProps {
@@ -54,9 +55,11 @@ export function AttendeeDetailModal({
               {/* Avatar */}
               <div className="w-24 h-24 rounded-full border-4 border-zinc-900 bg-zinc-800 overflow-hidden shadow-lg mb-4">
                 {attendee.imageFromUrl ? (
-                  <img
+                  <Image
                     src={attendee.imageFromUrl}
-                    alt={attendee.preferred_name}
+                    alt={attendee.preferred_name || "Profile"}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
                   />
                 ) : (

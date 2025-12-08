@@ -10,11 +10,21 @@ import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import type { HeroTheme } from '@/components/hero/theme';
 import { rhizClient } from '@/lib/rhizClient';
 import type { GraphAttendee as NetworkingAttendee } from '@/lib/types';
-import { Attendee } from '@/lib/types'; // This import is still needed for the ingestAttendees call
 import { AttendeeDetailModal } from '@/components/networking/AttendeeDetailModal';
+import { Speaker } from './speakers/SpeakerCard';
 
 interface EventLandingPageProps {
   config: EventAppConfig & { eventId?: string };
+}
+
+
+interface ContentAttendee {
+  id?: string;
+  name: string;
+  imageUrl?: string;
+  interests?: string[];
+  handle?: string;
+  did?: string;
 }
 
 export function EventLandingPage({ config }: EventLandingPageProps) {
@@ -61,20 +71,23 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   }));
 
   // Map generated content to component-compatible formats matching Protocol types
-  const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => ({
-    person_id: attendee.id || `person-${i}`,
-    owner_id: "system",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    legal_name: attendee.name,
-    preferred_name: attendee.name,
-    imageFromUrl: attendee.imageUrl, 
-    tags: attendee.interests,
-    phones: [],
-    social_handles: {},
-    handle: (attendee as any).handle,
-    did: (attendee as any).did,
-  }));
+  const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => {
+    const a = attendee as unknown as ContentAttendee;
+    return {
+      person_id: a.id || `person-${i}`,
+      owner_id: "system",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      legal_name: a.name,
+      preferred_name: a.name,
+      imageFromUrl: a.imageUrl, 
+      tags: a.interests || [],
+      phones: [],
+      social_handles: {},
+      handle: a.handle,
+      did: a.did,
+    };
+  });
 
   // Handle node interaction
   const handleNodeClick = async (attendee: NetworkingAttendee) => {
@@ -98,7 +111,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     }
   };
 
-  const handleSpeakerClick = async (speaker: any) => { 
+  const handleSpeakerClick = async (speaker: Speaker) => { 
      if (!currentUserId) return;
      
      // We need to find the person ID for this speaker.
@@ -165,7 +178,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
     // Only run if checking is enabled and we haven't run yet
     syncRhiz();
-  }, [config.content.sampleAttendees, config.content.speakers]);
+  }, [config.content.sampleAttendees, config.content.speakers, config.eventId]);
 
   return (
     <div className="w-full bg-white dark:bg-black min-h-screen">

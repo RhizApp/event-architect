@@ -1,11 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import clsx from "clsx";
 import { useState } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
 import { User } from "lucide-react";
-import { RelationshipDetail } from "@/lib/protocol-sdk/types";
+import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
 import { GraphAttendee } from "@/lib/types";
 
 export interface NetworkingGraphProps {
@@ -13,7 +14,7 @@ export interface NetworkingGraphProps {
   relationships?: RelationshipDetail[];
   totalCount: number;
   matchmakingEnabled: boolean;
-  opportunities?: unknown[]; 
+  opportunities?: OpportunityMatch[]; 
   onNodeClick?: (attendee: GraphAttendee) => void;
 }
 
@@ -74,12 +75,14 @@ const AvatarNode = ({
   x,
   y,
   delayOffset,
+  isMatch = false,
   onClick,
 }: {
   attendee: GraphAttendee | null;
   x: number;
   y: number;
   delayOffset: number;
+  isMatch?: boolean;
   onClick?: () => void;
 }) => {
   // Personalized organic motion parameters using stable state
@@ -115,19 +118,24 @@ const AvatarNode = ({
         onClick={onClick}
         className={clsx(
           "relative w-10 h-10 md:w-14 md:h-14 rounded-full p-[1px] transition-transform duration-300 hover:scale-110 focus:outline-hidden focus:ring-2 focus:ring-blue-500/50",
-          "bg-gradient-to-b from-white/20 to-white/5",
+          isMatch ? "bg-gradient-to-b from-amber-400 to-amber-600 shadow-amber-500/50" : "bg-gradient-to-b from-white/20 to-white/5",
           "shadow-lg shadow-black/10 group"
       )}>
+        {isMatch && (
+           <motion.div 
+             className="absolute -inset-1 rounded-full border border-amber-500/50 opacity-70"
+             animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
+             transition={{ duration: 2, repeat: Infinity }}
+           />
+        )}
         <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-white/5 relative z-10">
             {attendee?.imageFromUrl ? (
-                 <img
+                 <Image
                  src={attendee.imageFromUrl}
                  alt={attendee.preferred_name || "Attendee"}
+                 width={56}
+                 height={56}
                  className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
-                 onError={(e) => {
-                     e.currentTarget.style.display = 'none';
-                     e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-                 }}
                />
             ) : null}
             
@@ -158,6 +166,7 @@ export function NetworkingGraph({
   relationships = [],
   totalCount,
   matchmakingEnabled,
+  opportunities = [],
   onNodeClick,
 }: NetworkingGraphProps) {
   
@@ -181,6 +190,11 @@ export function NetworkingGraph({
     if (!attendee) return 0;
     const rel = relationships.find(r => r.target_person_id === attendee.person_id);
     return rel ? rel.strength_score : 0;
+  };
+
+  const isOpportunity = (attendee: GraphAttendee | null) => {
+     if (!attendee) return false;
+     return opportunities.some(op => op.candidate.person_id === attendee.person_id);
   };
 
   return (
@@ -211,6 +225,7 @@ export function NetworkingGraph({
                         x={x}
                         y={y}
                         delayOffset={i}
+                        isMatch={isOpportunity(attendee)}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />
                    </div>
@@ -238,6 +253,7 @@ export function NetworkingGraph({
                         x={x}
                         y={y}
                         delayOffset={i + orbit1.length}
+                        isMatch={isOpportunity(attendee)}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />
                    </div>
