@@ -136,15 +136,18 @@ export async function generateEventConfig(formData: FormData) {
           attendees: attendeesToIngest
         });
 
-        // The bulk API returns a list of personIds (strings). 
-        // We need to map these back to our content objects if possible.
-        // Ideally, ingestion returns the full objects or we fetch them.
-        // For now, we unfortunately can't get the Handle/DID back for *each* person easily 
-        // without a subsequent fetch or a smarter return type from `ingestAttendees`.
-        // 
-        // TODO: Update `ingestAttendees` to return map of externalId -> Person identity
-        // For this immediate step, we will rely on the graph fetching them by ID or email later.
         console.log(`Rhiz: Bulk sync complete. Created: ${result.created}`);
+        
+        // Map back the generated identity data (handles/DIDs) to the config content
+        // This ensures the frontend displays the correct handle immediately
+        result.attendees.forEach(ingested => {
+           const original = config.content.sampleAttendees.find(a => a.id === ingested.externalUserId);
+           if (original) {
+               // We cast to any because the BAML type might not explicitly allow handle/did yet
+               (original as any).handle = ingested.handle;
+               (original as any).did = ingested.did;
+           }
+        });
 
       } catch (e) {
         console.warn("Retrying individual sync due to bulk failure", e);

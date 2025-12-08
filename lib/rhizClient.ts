@@ -33,6 +33,7 @@ export const rhizClient = {
     externalUserId?: string;
     email?: string;
     name?: string;
+    tags?: string[];
   }): Promise<{ id: string; externalUserId?: string; did?: string; handle?: string }> => {
     try {
       // Try to find existing person by email if provided
@@ -66,6 +67,7 @@ export const rhizClient = {
         legal_name: args.name || args.email || "Anonymous User",
         preferred_name: args.name,
         emails: args.email ? [args.email] : [],
+        tags: args.tags || [],
       };
 
       const person = await peopleClient.createPerson(personData);
@@ -171,43 +173,44 @@ export const rhizClient = {
 
   /**
    * Bulk ingest attendees into Rhiz Protocol
-   * Creates people records for all attendees
+   * Creates people records for all attendees and returns their identities (including handles/DIDs)
    */
   ingestAttendees: async (args: {
     eventId: string;
-    attendees: { name: string; email?: string; tags?: string[] }[];
-  }): Promise<{ created: number; failed: number; personIds: string[] }> => {
+    attendees: { id?: string; name: string; email?: string; tags?: string[] }[];
+  }): Promise<{ created: number; failed: number; attendees: { id: string; externalUserId?: string; did?: string; handle?: string }[] }> => {
     try {
       console.log(`Rhiz: Ingesting ${args.attendees.length} attendees`);
       
-      // Convert attendees to PersonCreate format
-      const peopleData: PersonCreate[] = args.attendees.map(attendee => ({
-        owner_id: ownerId,
-        legal_name: attendee.name,
-        preferred_name: attendee.name,
-        emails: attendee.email ? [attendee.email] : [],
-        tags: attendee.tags || [],
-      }));
+      // Process in parallel using ensureIdentity to guarantee we get the full objects back
+      // Using Promise.all can be heavy if array is huge, but for event sample (~20-50) it's fine.
+      const promises = args.attendees.map(attendee => 
+        rhizClient.ensureIdentity({
+          name: attendee.name,
+          email: attendee.email,
+          tags: attendee.tags,
+          externalUserId: attendee.id 
+        })
+      );
 
-      // Use bulk create API
-      const result = await peopleClient.bulkCreatePeople(peopleData);
+      const results = await Promise.all(promises);
       
-      console.log(`Rhiz: Successfully created ${result.count} people`);
-      if (result.errors && result.errors.length > 0) {
-        console.warn(`Rhiz: ${result.errors.length} attendees failed to create`);
-      }
+      const successful = results.filter(r => !r.id.startsWith("local_"));
+      const failed = results.filter(r => r.id.startsWith("local_"));
+
+      console.log(`Rhiz: Successfully synced ${successful.length} people`);
 
       return {
-        created: result.count,
-        failed: result.skipped + result.errors.length,
-        personIds: result.ids,
+        created: successful.length,
+        failed: failed.length,
+        attendees: results,
       };
     } catch (error) {
       console.warn("Rhiz: Failed to ingest attendees", error);
       return {
         created: 0,
         failed: args.attendees.length,
-        personIds: [],
+        attendees: [],
       };
     }
   },
