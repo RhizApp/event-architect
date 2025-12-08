@@ -267,26 +267,32 @@ export function NetworkingGraph({
   }, []);
 
   // Responsive radii
-  const orbit1Radius = isMobile ? 80 : 140; // Smaller on mobile
-  const orbit2Radius = isMobile ? 140 : 260; 
+  const orbit1Radius = isMobile ? 60 : 100;
+  const orbit2Radius = isMobile ? 110 : 200; 
+  const orbit3Radius = isMobile ? 160 : 300;
 
-  // Limit visible attendees on mobile to prevent clutter
-  const maxAttendees = isMobile ? 6 : 10;
+  // Increase limit to show more density (was 6/10)
+  const maxAttendees = isMobile ? 20 : 50;
   
   // Fill with nulls if not enough attendees to make it look populated
   const displayAttendees = useMemo(() => {
      let list: (GraphAttendee | null)[] = featuredAttendees.slice(0, maxAttendees);
-     if (list.length < 8) {
-       const needed = 8 - list.length;
+     // If we have very few people, fill up to at least 15 for a good visual
+     if (list.length < 15) {
+       const needed = 15 - list.length;
        list = [...list, ...Array(needed).fill(null)];
      }
      return list;
   }, [featuredAttendees, maxAttendees]);
 
-  // Split into 2 orbits
-  const orbit1Count = Math.ceil(displayAttendees.length * 0.4); 
-  const orbit1 = displayAttendees.slice(0, orbit1Count);
-  const orbit2 = displayAttendees.slice(orbit1Count);
+  // Distribute across 3 orbits
+  // inner: 20%, middle: 35%, outer: 45%
+  const count1 = Math.ceil(displayAttendees.length * 0.20);
+  const count2 = Math.ceil(displayAttendees.length * 0.35);
+  
+  const orbit1 = displayAttendees.slice(0, count1);
+  const orbit2 = displayAttendees.slice(count1, count1 + count2);
+  const orbit3 = displayAttendees.slice(count1 + count2);
 
   // Helper to find relationship strength for an attendee
   const getStrength = (attendee: GraphAttendee | null) => {
@@ -319,7 +325,7 @@ export function NetworkingGraph({
             <motion.div
                className={clsx(
                  "absolute rounded-full border border-white/5",
-                 isMobile ? "w-[160px] h-[160px]" : "w-[280px] h-[280px] md:w-[400px] md:h-[400px]" // Dynamic sizing classes
+                 isMobile ? "w-[120px] h-[120px]" : "w-[200px] h-[200px]" // 2 * radius
                )}
                animate={{ rotate: 360 }}
                transition={TRANSITIONS.orbit(60)}
@@ -346,11 +352,11 @@ export function NetworkingGraph({
              })}
         </motion.div>
 
-         {/* Orbit 2 - Outer */}
+         {/* Orbit 2 - Middle */}
          <motion.div
            className={clsx(
              "absolute rounded-full border border-white/5",
-             isMobile ? "w-[280px] h-[280px]" : "w-[520px] h-[520px] md:w-[720px] md:h-[720px]"
+             isMobile ? "w-[220px] h-[220px]" : "w-[400px] h-[400px]" // 2 * radius
            )}
            animate={{ rotate: -360 }}
            transition={TRANSITIONS.orbit(90)}
@@ -358,8 +364,8 @@ export function NetworkingGraph({
             {orbit2.map((attendee: GraphAttendee | null, i: number) => {
                  const angle = (i / orbit2.length) * 360;
                  const radian = (angle * Math.PI) / 180;
-                 const x = Math.cos(radian) * orbit2Radius; // radius
-                 const y = Math.sin(radian) * orbit2Radius;
+                 const x = Math.cos(radian) * orbit2Radius; 
+                 const y = Math.sin(radian) * orbit2Radius; 
                  
                  return (
                    <div key={i} className="absolute top-1/2 left-1/2 w-0 h-0">
@@ -369,6 +375,37 @@ export function NetworkingGraph({
                         x={x}
                         y={y}
                         delayOffset={i + orbit1.length}
+                        isMatch={isOpportunity(attendee)}
+                        onClick={() => attendee && onNodeClick?.(attendee)}
+                      />
+                   </div>
+                 );
+             })}
+        </motion.div>
+
+        {/* Orbit 3 - Outer */}
+        <motion.div
+           className={clsx(
+             "absolute rounded-full border border-white/5",
+             isMobile ? "w-[320px] h-[320px]" : "w-[600px] h-[600px]" // 2 * radius
+           )}
+           animate={{ rotate: 360 }}
+           transition={TRANSITIONS.orbit(120)}
+        >
+            {orbit3.map((attendee: GraphAttendee | null, i: number) => {
+                 const angle = (i / orbit3.length) * 360;
+                 const radian = (angle * Math.PI) / 180;
+                 const x = Math.cos(radian) * orbit3Radius; 
+                 const y = Math.sin(radian) * orbit3Radius; 
+                 
+                 return (
+                   <div key={i} className="absolute top-1/2 left-1/2 w-0 h-0">
+                      <EdgeLine x={x} y={y} strength={getStrength(attendee)} />
+                      <AvatarNode
+                        attendee={attendee}
+                        x={x}
+                        y={y}
+                        delayOffset={i + orbit1.length + orbit2.length}
                         isMatch={isOpportunity(attendee)}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />

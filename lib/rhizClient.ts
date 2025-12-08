@@ -1,6 +1,7 @@
 import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient } from "./protocol-sdk";
 import { RelationshipDetail, OpportunityMatch } from "./protocol-sdk/types";
 import { Session } from "./types";
+import { withTimeout } from "./errorHandling";
 
 // Initialize the Rhiz Protocol Client
 const baseUrl = process.env.NEXT_PUBLIC_RHIZ_API_URL || "http://localhost:8000";
@@ -39,11 +40,15 @@ export const rhizClient = {
       // Try to find existing person by email if provided
       if (args.email) {
         try {
-          const existingPeople = await peopleClient.listPeople({
-            owner_id: ownerId,
-            email: args.email,
-            limit: 1,
-          });
+          const existingPeople = await withTimeout(
+            peopleClient.listPeople({
+              owner_id: ownerId,
+              email: args.email,
+              limit: 1,
+            }),
+            3000,
+            "Identity search timed out"
+          );
           
           if (existingPeople.people.length > 0) {
             const person = existingPeople.people[0];
@@ -57,7 +62,7 @@ export const rhizClient = {
           }
         } catch (searchError) {
           // If search fails, continue to create new person
-          console.warn("Rhiz: Failed to search for existing person", searchError);
+          console.warn("Rhiz: Failed to search for existing person (or timed out)", searchError);
         }
       }
 
@@ -70,7 +75,12 @@ export const rhizClient = {
         tags: args.tags || [],
       };
 
-      const person = await peopleClient.createPerson(personData);
+      const person = await withTimeout(
+        peopleClient.createPerson(personData),
+        5000,
+        "Identity creation timed out"
+      );
+      
       console.log("Rhiz: Created new person", person.person_id);
       
       return {
@@ -107,7 +117,7 @@ export const rhizClient = {
         // outcome_tag: args.metadata?.outcome as string,
       };
 
-      await client.logInteraction(payload);
+      await withTimeout(client.logInteraction(payload), 2000).catch(() => {});
     } catch (error) {
       console.warn("Failed to log interaction to Rhiz Protocol:", error);
       // Don't throw, just log warning so app doesn't crash
@@ -125,14 +135,18 @@ export const rhizClient = {
   }): Promise<RelationshipDetail[]> => {
     try {
       // Get relationships sorted by strength
-      const response = await client.listRelationships({
-        owner_id: ownerId,
-        source_person_id: args.identityId,
-        limit: args.limit || 10,
-        sort_by: "strength_score",
-        sort_order: "desc",
-        min_strength: 0.2, // Only show meaningful relationships
-      });
+      const response = await withTimeout(
+        client.listRelationships({
+          owner_id: ownerId,
+          source_person_id: args.identityId,
+          limit: args.limit || 10,
+          sort_by: "strength_score",
+          sort_order: "desc",
+          min_strength: 0.2, // Only show meaningful relationships
+        }),
+        5000,
+        "Relationship fetch timed out"
+      );
       
       // Return the relationships directly as Protocol Types
       // We perform a cast here because the SDK currently returns RelationshipRead[] 
@@ -161,10 +175,14 @@ export const rhizClient = {
   }): Promise<OpportunityMatch[]> => {
     try {
       // Delegate to the Protocol's NLP Engine
-      return await nlpClient.findOpportunityMatches({
-        personId: args.identityId,
-        limit: args.limit
-      });
+      return await withTimeout(
+        nlpClient.findOpportunityMatches({
+          personId: args.identityId,
+          limit: args.limit
+        }),
+        5000,
+        "Opportunity match fetch timed out"
+      );
     } catch (error) {
       console.warn("Rhiz: Failed to get opportunity matches", error);
       return [];
@@ -184,6 +202,8 @@ export const rhizClient = {
       
       // Process in parallel using ensureIdentity to guarantee we get the full objects back
       // Using Promise.all can be heavy if array is huge, but for event sample (~20-50) it's fine.
+      // We don't wrap the *entire* batch in a timeout, but rely on individual ensureIdentity timeouts.
+      
       const promises = args.attendees.map(attendee => 
         rhizClient.ensureIdentity({
           name: attendee.name,

@@ -27,150 +27,48 @@ interface ContentAttendee {
   did?: string;
 }
 
+import { RegistrationModal } from '@/components/registration/RegistrationModal';
+
+// ... other imports
+
 export function EventLandingPage({ config }: EventLandingPageProps) {
-  // Map config to theme
-  // Default to 'professional' if not found or no mapping obvious
-  // The config has branding.toneKeywords which might contain relevant keywords
-  const determineTheme = (toneKeywords: string[]): HeroTheme => {
-    if (toneKeywords.includes('luxury')) return 'luxury';
-    if (toneKeywords.includes('vibrant') || toneKeywords.includes('playful')) return 'vibrant';
-    return 'professional';
-  };
+  // ... existing code ...
 
-  const theme = determineTheme(config.branding.toneKeywords);
-  
-  // State for live Rhiz data
-  const [relationships, setRelationships] = React.useState<RelationshipDetail[]>([]);
-  const [opportunities, setOpportunities] = React.useState<{ suggestion: IntroductionSuggestion; candidate: PersonRead }[]>([]);
-  const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+  const [userProfile, setUserProfile] = React.useState<{ name: string; email: string } | null>(null);
+  const [isRegistrationOpen, setIsRegistrationOpen] = React.useState(false);
 
-  // State for selected attendee
-  const [selectedAttendee, setSelectedAttendee] = React.useState<NetworkingAttendee | null>(null);
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true); // Default to loading while syncing
-
-
-  // Map generated content to component-compatible formats
-  const speakers = config.content.speakers.map(speaker => ({
-    name: speaker.name,
-    role: speaker.role,
-    company: speaker.company,
-    imageUrl: speaker.imageUrl,
-    bio: speaker.bio,
-  }));
-
-  const sessions = config.content.schedule.map(session => ({
-    id: session.id,
-    time: session.time,
-    title: session.title,
-    speaker: {
-      name: session.speakerName,
-      avatar: speakers.find(s => s.name === session.speakerName)?.imageUrl || "",
-      role: session.speakerRole,
-    },
-    track: session.track as "Main Stage" | "Workshop" | "Networking",
-    isWide: session.isWide,
-  }));
-
-  // Map generated content to component-compatible formats matching Protocol types
-  const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => {
-    const a = attendee as unknown as ContentAttendee;
-    return {
-      person_id: a.id || `person-${i}`,
-      owner_id: "system",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      legal_name: a.name,
-      preferred_name: a.name,
-      imageFromUrl: a.imageUrl, 
-      tags: a.interests || [],
-      phones: [],
-      social_handles: {},
-      handle: a.handle,
-      did: a.did,
-    };
-  });
-
-  // Handle node interaction
-  const handleNodeClick = async (attendee: NetworkingAttendee) => {
-    setSelectedAttendee(attendee);
-    setIsModalOpen(true);
-
-    if (!currentUserId) return;
-    
-    // Log view
-    try {
-      await rhizClient.recordInteraction({
-        eventId: config.eventId || "default-event",
-        fromIdentityId: currentUserId,
-        toIdentityId: attendee.person_id,
-        type: "view_profile",
-        metadata: { source: "networking_graph" }
-      });
-    } catch (e) {
-      console.error("Failed to record interaction", e);
-    }
-  };
-
-  const handleConnect = async (attendee: NetworkingAttendee) => {
-    if (!currentUserId) {
-        alert("You must be logged in to connect.");
-        return;
-    }
-
-    console.log("Rhiz: Initiating connection with", attendee.person_id);
-    
-    // In a full implementation, this might call a specific `createRelationship` endpoint
-    // For now, we record a high-intent interaction which the Protocol converts to a relationship lead
-    await rhizClient.recordInteraction({
-        eventId: config.eventId || "default-event",
-        fromIdentityId: currentUserId,
-        toIdentityId: attendee.person_id,
-        type: "connection_request",
-        metadata: { 
-            source: "attendee_modal",
-            status: "pending"
-        }
-    });
-
-    // Simulate network delay for UX
-    await new Promise(resolve => setTimeout(resolve, 800));
-  };
-
-  const handleSpeakerClick = async (speaker: Speaker) => { 
-     if (!currentUserId) return;
-     
-     // We need to find the person ID for this speaker.
-     // Since we mocked ingestion, we can rely on a deterministic ID or lookup.
-     // For this demo, let's assume we can map back via name or the ID we assigned during ingestion.
-     // In the useEffect below, we'll assign IDs to speakers.
-     
-     const speakerId = speaker.id || `speaker_${speaker.name.replace(/\s+/g, '_')}`;
-
-     console.log("Rhiz: Recording interaction with speaker", speakerId);
-     try {
-       await rhizClient.recordInteraction({
-         eventId: config.eventId || "default-event",
-         fromIdentityId: currentUserId,
-         toIdentityId: speakerId,
-         type: "view_speaker",
-         metadata: { source: "speaker_spotlight" }
-       });
-       alert(`Interaction recorded: Viewed Speaker ${speaker.name}`);
-     } catch (e) {
-       console.error("Failed to record speaker interaction", e);
-     }
-  };
-
-  // Effect: Ingest attendees & fetch relationships
+  // Restore session on load
   React.useEffect(() => {
-    const syncRhiz = async () => {
+    const saved = localStorage.getItem(`rhiz_user_${config.eventId}`);
+    if (saved) {
+      try {
+        setUserProfile(JSON.parse(saved));
+      } catch (e) { console.error("Failed to parse user session", e); }
+    }
+  }, [config.eventId]);
+
+  const handleRegister = async (data: { name: string; email: string }) => {
+    // 1. Save locally
+    setUserProfile(data);
+    localStorage.setItem(`rhiz_user_${config.eventId}`, JSON.stringify(data));
+    
+    // 2. Trigger re-sync (will happen automatically due to useEffect dependency on userProfile? No, we need to add it or call syncRhiz)
+    // Actually syncRhiz is dependent on useCallback, let's update that dependency chain or just rely on a separate effect/call.
+    // The easiest way is to let the userProfile state change trigger the effect if we add it to the dependency array.
+  };
+
+  const syncRhiz = React.useCallback(async () => {
       try {
         setIsLoading(true);
+        setGraphError(null);
+
         // 1. Ensure current user has an identity
-        const currentUser = await rhizClient.ensureIdentity({
-          name: "Event Organizer", 
-        });
+        // Use registered profile OR fallback to "Event Organizer" (Guest)
+        const identityParams = userProfile 
+            ? { name: userProfile.name, email: userProfile.email }
+            : { name: "Event Organizer" };
+
+        const currentUser = await rhizClient.ensureIdentity(identityParams);
         setCurrentUserId(currentUser.id);
 
         if (!config.eventId) {
@@ -181,34 +79,40 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
         const eventId = config.eventId;
 
-        // 2. Fetch real relationships for the graph
-        const suggestions = await rhizClient.getSuggestedConnections({
-          eventId,
-          identityId: currentUser.id,
-          limit: 10,
-        });
+        // 2. Fetch real relationships & matches
+        const [suggestions, matches] = await Promise.all([
+             rhizClient.getSuggestedConnections({
+                eventId,
+                identityId: currentUser.id,
+                limit: 10,
+             }),
+             rhizClient.getOpportunityMatches({
+                eventId,
+                identityId: currentUser.id,
+                limit: 3
+             })
+        ]);
 
-        console.log("Rhiz: Fetched relationships", suggestions);
+        console.log("Rhiz: Fetched data for", identityParams.name, suggestions);
         setRelationships(suggestions);
-
-        // 3. Fetch Opportunity Matches (Pre-Meeting)
-        const opportunites = await rhizClient.getOpportunityMatches({
-           eventId,
-           identityId: currentUser.id,
-           limit: 3
-        });
-        setOpportunities(opportunites);
+        setOpportunities(matches);
 
       } catch (err) {
         console.error("Rhiz: Sync failed", err);
+        setGraphError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
       }
-    };
+    }, [config.eventId, userProfile]); // Re-sync when userProfile changes
 
-    // Only run if checking is enabled and we haven't run yet
+
+  // Effect: Ingest attendees & fetch relationships
+  React.useEffect(() => {
     syncRhiz();
-  }, [config.content.sampleAttendees, config.content.speakers, config.eventId]);
+  }, [syncRhiz]);
+
+
+  // ... mapped data ...
 
   return (
     <div className="w-full bg-white dark:bg-black min-h-screen">
@@ -218,26 +122,30 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
          subtitle={config.content.tagline}
          date={config.content.date}
          location={config.content.location}
-         primaryAction={{ label: "Get Tickets", onClick: () => alert("Ticket flow placeholder") }}
+         primaryAction={{ 
+             label: userProfile ? `Welcome, ${userProfile.name}` : "Get Tickets", 
+             onClick: () => userProfile ? null : setIsRegistrationOpen(true) 
+         }}
          theme={theme}
        />
        
-       {/* Speakers Section */}
+       {/* ... Speakers ... */}
        <SpeakerSpotlight 
          speakers={speakers.map(s => ({ ...s, id: `speaker_${s.name.replace(/\s+/g, '_')}` }))}
          layout="carousel"
          onSpeakerClick={handleSpeakerClick}
        />
-
-       {/* Schedule Section */}
+       
+       {/* ... Schedule ... */}
        <section className="py-20 bg-neutral-900 border-y border-neutral-800">
-          <div className="container mx-auto px-6 mb-12 text-center">
-             <h2 className="text-3xl md:text-5xl font-serif text-white mb-4">Event Schedule</h2>
-             <p className="text-neutral-400 max-w-2xl mx-auto">
-               Curated sessions designed to inspire and connect.
-             </p>
-          </div>
-          <ScheduleGrid sessions={sessions} />
+           {/* ... schedule content ... */}
+           <div className="container mx-auto px-6 mb-12 text-center">
+              <h2 className="text-3xl md:text-5xl font-serif text-white mb-4">Event Schedule</h2>
+              <p className="text-neutral-400 max-w-2xl mx-auto">
+                Curated sessions designed to inspire and connect.
+              </p>
+           </div>
+           <ScheduleGrid sessions={sessions} />
        </section>
 
        {/* Networking Preview Section */}
@@ -252,8 +160,11 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
                     ? "Our AI-powered matchmaking connects you with the right people effortlessly." 
                     : "Connect with like-minded peers in an organic, curated environment."}
                 </p>
-                <button className="px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-neutral-200 transition-colors">
-                  Join the Network
+                <button 
+                    onClick={() => setIsRegistrationOpen(true)}
+                    className="px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-neutral-200 transition-colors"
+                >
+                  {userProfile ? "Update Profile" : "Join the Network"}
                 </button>
              </div>
              <div className="relative">
@@ -265,17 +176,25 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
                   opportunities={opportunities}
                   onNodeClick={handleNodeClick}
                   isLoading={isLoading}
+                  error={graphError}
+                  onRetry={syncRhiz}
                 />
              </div>
           </div>
        </section>
 
-       {/* Interactive Modal */}
+       {/* Interactive Modals */}
        <AttendeeDetailModal 
          isOpen={isModalOpen}
          onClose={() => setIsModalOpen(false)}
          attendee={selectedAttendee}
          onConnect={handleConnect}
+       />
+       
+       <RegistrationModal
+          isOpen={isRegistrationOpen}
+          onClose={() => setIsRegistrationOpen(false)}
+            onRegister={handleRegister}
        />
     </div>
   );

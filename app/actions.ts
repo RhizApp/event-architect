@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "node:crypto";
 import { b as baml } from "@/lib/baml_client/baml_client";
 import { EventAppConfig } from "@/lib/baml_client/baml_client/types";
 import { rhizClient } from "@/lib/rhizClient";
@@ -13,6 +14,10 @@ import {
   withTimeout,
   logError
 } from "@/lib/errorHandling";
+
+// Deterministic hash to keep event + identity IDs stable across retries
+const stableHash = (input: string) =>
+  crypto.createHash("sha256").update(input).digest("hex").slice(0, 12);
 
 /**
  * Generate event configuration with comprehensive error handling
@@ -108,8 +113,9 @@ export async function generateEventConfig(formData: FormData) {
       }
     );
 
-    // Generate a stable event ID
-    const eventId = `event_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    // Generate a stable event ID based on the core inputs so Rhiz relationships are repeatable
+    const eventFingerprint = `${eventBasics}|${eventDate}|${eventLocation}|${goals.join(",")}|${audience}|${tone}`;
+    const eventId = `event_${stableHash(eventFingerprint)}`;
 
     console.log("Successfully generated event config. Event ID:", eventId);
 
@@ -121,7 +127,7 @@ export async function generateEventConfig(formData: FormData) {
     if (config.content?.sampleAttendees && config.content.sampleAttendees.length > 0) {
       // Prepare attendees for ingestion, ensuring everyone has a stable ID
       const attendeesToIngest = config.content.sampleAttendees.map((a, idx) => {
-        if (!a.id) a.id = `attendee_${idx}_${Date.now()}`;
+        if (!a.id) a.id = `attendee_${stableHash(`${eventId}_${idx}_${a.name}`)}`;
         return {
           id: a.id,
           name: a.name,
@@ -162,16 +168,18 @@ export async function generateEventConfig(formData: FormData) {
     if (config.content?.speakers) {
       const speakerPromises = config.content.speakers.map(async (s, idx) => {
         const email = `${s.name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+        const speakerId = `speaker_${stableHash(`${eventId}_${idx}_${s.name}`)}`;
         
         try {
           const identity = await rhizClient.ensureIdentity({
              email,
              name: s.name,
-             externalUserId: `speaker_${idx}`
+             externalUserId: speakerId
           });
           
           if (identity.handle) (s as any).handle = identity.handle;
           if (identity.did) (s as any).did = identity.did;
+          if (!(s as any).id) (s as any).id = identity.id || speakerId;
           
         } catch (e) {
           console.warn(`Failed to sync speaker ${s.name}`, e);
