@@ -8,7 +8,7 @@ import { User } from "lucide-react";
 import { RelationshipDetail } from "@/lib/protocol-sdk/types";
 import { GraphAttendee } from "@/lib/types";
 
-export interface NetworkingPreviewProps {
+export interface NetworkingGraphProps {
   featuredAttendees: GraphAttendee[];
   relationships?: RelationshipDetail[];
   totalCount: number;

@@ -5,7 +5,7 @@ import { EventAppConfig } from "@/lib/baml_client/baml_client/types";
 import { PersonRead, RelationshipDetail, IntroductionSuggestion } from "@/lib/protocol-sdk/types";
 import { HeroSection } from '@/components/hero/HeroSection';
 import { SpeakerSpotlight } from './speakers/SpeakerSpotlight';
-import { NetworkingPreview } from '@/components/networking/NetworkingPreview';
+import { NetworkingGraph } from '@/components/networking/NetworkingGraph';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import type { HeroTheme } from '@/components/hero/theme';
 import { rhizClient } from '@/lib/rhizClient';
@@ -230,7 +230,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
                 </button>
              </div>
              <div className="relative">
-                <NetworkingPreview 
+                <NetworkingGraph 
                   featuredAttendees={attendees}
                   totalCount={500}
                   matchmakingEnabled={config.matchmakingConfig.enabled}
