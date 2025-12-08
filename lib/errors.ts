@@ -7,7 +7,7 @@ export class BAMLGenerationError extends Error {
   constructor(
     message: string,
     public readonly originalError?: Error,
-    public readonly context?: Record<string, any>
+    public readonly context?: Record<string, unknown>
   ) {
     super(message);
     this.name = 'BAMLGenerationError';
@@ -31,7 +31,7 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     public readonly field?: string,
-    public readonly value?: any
+    public readonly value?: unknown
   ) {
     super(message);
     this.name = 'ValidationError';

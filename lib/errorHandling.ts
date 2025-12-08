@@ -89,8 +89,8 @@ export async function withTimeout<T>(
  * Section-level error boundary for partial failures
  * Returns successful results and collects errors for failed sections
  */
-export async function handlePartialFailures<T extends Record<string, any>>(
-  tasks: Record<string, () => Promise<any>>,
+export async function handlePartialFailures<T extends Record<string, unknown>>(
+  tasks: { [K in keyof T]: () => Promise<T[K]> },
   fallbacks?: Partial<T>
 ): Promise<{ results: Partial<T>; errors: Record<string, Error> }> {
   const results: Partial<T> = {};
@@ -117,7 +117,7 @@ export async function handlePartialFailures<T extends Record<string, any>>(
 /**
  * Analytics/logging helper for errors
  */
-export function logError(error: Error, context?: Record<string, any>) {
+export function logError(error: Error, context?: Record<string, unknown>) {
   // In production, this would send to Sentry, PostHog, etc.
   console.error('Error logged:', {
     name: error.name,

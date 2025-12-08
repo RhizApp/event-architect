@@ -7,7 +7,6 @@ import {
   GoalUpdate,
   GoalView,
   GoalListResponse,
-  GoalTaskResponse,
   OrchestratedPlan,
   GoalsQueryParams,
 } from './types';
@@ -117,4 +116,3 @@ export class GoalsClient {
     });
   }
 }
-

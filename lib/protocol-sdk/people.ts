@@ -8,7 +8,6 @@ import {
   PersonUpdate,
   PersonListResponse,
   PersonBulkResponse,
-  PersonDetail,
   OrganizationMembershipCreate,
   OrganizationMembershipRead,
   PeopleQueryParams,
@@ -165,4 +164,3 @@ export class PeopleClient {
     );
   }
 }
-

@@ -111,6 +111,9 @@ export class NlpClient {
     limit?: number;
     // In a real implementation, we would pass context/event ID here
   }): Promise<OpportunityMatch[]> {
+      const { personId, limit } = args;
+      void personId;
+      void limit;
       // MOCK IMPLEMENTATION - To be replaced by:
       // return this.fetch<OpportunityMatch[]>('/v1/nlp/opportunities', { method: 'POST', body: JSON.stringify(args) });
       

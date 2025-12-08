@@ -30,6 +30,33 @@ export type EventStatus = "draft" | "published" | "archived";
 
 export type VenueType = "virtual" | "in_person" | "hybrid";
 
+export type TicketTier = {
+  id: string;
+  name: string;
+  price: number; // In cents/lowest unit
+  currency: string;
+  features: string[];
+  capacity?: number;
+};
+
+export type SponsorTier = {
+  id: string;
+  name: string;
+  minContribution: number;
+  benefits: string[];
+  sponsors: Organization[];
+};
+
+export type Speaker = {
+  name: string;
+  role: string;
+  company: string;
+  bio: string;
+  imageUrl?: string;
+  handle?: string; // Rhiz handle
+  did?: string; // Rhiz DID
+};
+
 export type Event = {
   id: string;
   organizationId: string;
@@ -88,6 +115,45 @@ export type EventAppConfig = {
     toneKeywords: string[];
   };
   designNotes?: string;
+  
+  // New "Ingest" Fields
+  ticketing?: {
+    skus: TicketTier[];
+    registrationOpen: boolean;
+  };
+  venueConstraints?: {
+    maxCapacity: number;
+    roomConstraints: Record<string, { capacity: number; avFeatures: string[] }>;
+    accessibilityFeatures: string[];
+  };
+  sponsors?: {
+    tiers: SponsorTier[];
+    assets: Record<string, string>; // e.g. "tier_1_logo_url"
+  };
+  legal?: {
+    codeOfConductUrl?: string;
+    privacyPolicyUrl?: string;
+    photoConsentRequired: boolean;
+    termsOfServiceUrl?: string;
+  };
+  successMetrics?: {
+    targetNps?: number;
+    pipelineTargets?: { value: string; currency: string };
+  };
+  contentGuardrails?: {
+    brandVoiceGuidelines: string;
+    tabooTopics: string[];
+    sensitiveTopics: string[];
+  };
+  content?: {
+    eventName: string;
+    tagline: string;
+    date: string;
+    location: string;
+    speakers: Speaker[];
+    schedule: Session[];
+    sampleAttendees: GraphAttendee[]; // Updated to GraphAttendee to include detailed info
+  };
 };
 
 export type Attendee = {
