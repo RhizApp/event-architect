@@ -11,6 +11,7 @@ import type { HeroTheme } from '@/components/hero/theme';
 import { rhizClient } from '@/lib/rhizClient';
 import type { GraphAttendee as NetworkingAttendee } from '@/lib/types';
 import { Attendee } from '@/lib/types'; // This import is still needed for the ingestAttendees call
+import { AttendeeDetailModal } from '@/components/networking/AttendeeDetailModal';
 
 interface EventLandingPageProps {
   config: EventAppConfig & { eventId?: string };
@@ -32,6 +33,10 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   const [relationships, setRelationships] = React.useState<RelationshipDetail[]>([]);
   const [opportunities, setOpportunities] = React.useState<{ suggestion: IntroductionSuggestion; candidate: PersonRead }[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
+
+  // State for selected attendee
+  const [selectedAttendee, setSelectedAttendee] = React.useState<NetworkingAttendee | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   // Map generated content to component-compatible formats
   const speakers = config.content.speakers.map(speaker => ({
@@ -73,6 +78,9 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
   // Handle node interaction
   const handleNodeClick = async (attendee: NetworkingAttendee) => {
+    setSelectedAttendee(attendee);
+    setIsModalOpen(true);
+
     if (!currentUserId) return;
     
     console.log("Rhiz: Recording interaction with", attendee.person_id);
@@ -84,7 +92,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         type: "view_profile",
         metadata: { source: "networking_graph" }
       });
-      alert(`Interaction recorded: Viewed ${attendee.preferred_name || 'Attendee'}`);
+      // alert(`Interaction recorded: Viewed ${attendee.preferred_name || 'Attendee'}`); // Removed alert
     } catch (e) {
       console.error("Failed to record interaction", e);
     }
@@ -217,6 +225,13 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
              </div>
           </div>
        </section>
+
+       {/* Interactive Modal */}
+       <AttendeeDetailModal 
+         isOpen={isModalOpen}
+         onClose={() => setIsModalOpen(false)}
+         attendee={selectedAttendee}
+       />
     </div>
   );
 }
