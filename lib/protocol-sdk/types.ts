@@ -124,6 +124,9 @@ export interface PersonBase {
   bio_summary?: string;
   tags?: string[];
   did?: string;
+  handle?: string;
+  wallet_address?: string;
+  is_claimed?: boolean;
 }
 
 export interface PersonCreate extends PersonBase {

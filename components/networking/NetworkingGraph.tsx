@@ -133,10 +133,12 @@ const AvatarNode = ({
             
             <div className={clsx(
                 "w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500 text-xs font-medium absolute inset-0",
-                attendee?.imageFromUrl ? "-z-10" : "" // Place behind if image exists (fallback logic handled by onError usually, but this is safe)
+                attendee?.imageFromUrl ? "-z-10" : "" 
             )}>
               {attendee ? (
-                <span className="text-white/80">{attendee.preferred_name?.[0] || "U"}</span>
+                <span className="text-white/80">
+                  {attendee.handle ? `@${attendee.handle[0]}` : (attendee.preferred_name?.[0] || "U")}
+                </span>
               ) : (
                 <User size={14} className="opacity-50" />
               )}

@@ -109,37 +109,73 @@ export async function generateEventConfig(formData: FormData) {
       }
     );
 
-    console.log("Successfully generated event config");
+    // Generate a stable event ID
+    const eventId = `event_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-    // Ingest attendees into Rhiz Protocol if they exist
-    if (config.content?.sampleAttendees && config.content.sampleAttendees.length > 0) {
-      try {
-        const attendees: Attendee[] = config.content.sampleAttendees.map((a, idx) => ({
-          id: a.id || `attendee_${idx}`,
-          eventId: `event_${Date.now()}`,
-          userId: `user_${idx}`,
-          rhizIdentityId: "",
-          name: a.name,
-          email: `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          headline: undefined,
-          company: undefined,
-          tags: [],
-          intents: a.interests || [],
-        }));
+    console.log("Successfully generated event config. Event ID:", eventId);
 
-        const result = await rhizClient.ingestAttendees({
-          eventId: `event_${Date.now()}`,
-          attendees,
-        });
+    // Sync with Rhiz Protocol
+    const syncPromises: Promise<void>[] = [];
 
-        console.log(`Rhiz: Ingested ${result.created} attendees (${result.failed} failed)`);
-      } catch (ingestionError) {
-        // Log error but don't fail the entire generation
-        console.warn("Failed to ingest attendees into Rhiz Protocol:", ingestionError);
-      }
+    // 1. Sync Sample Attendees
+    if (config.content?.sampleAttendees) {
+      const attendeePromises = config.content.sampleAttendees.map(async (a, idx) => {
+        // Assign stable ID if missing
+        if (!a.id) a.id = `attendee_${idx}_${Date.now()}`;
+        
+        const email = `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+        
+        try {
+          const identity = await rhizClient.ensureIdentity({
+            email,
+            name: a.name,
+            externalUserId: a.id
+          });
+          
+          // Update object with handle & did (cast to any to bypass strict BAML types)
+          if (identity.handle) (a as any).handle = identity.handle;
+          if (identity.did) (a as any).did = identity.did;
+          (a as any).rhizId = identity.id;
+          
+        } catch (e) {
+          console.warn(`Failed to sync attendee ${a.name}`, e);
+        }
+      });
+      syncPromises.push(...attendeePromises);
+    }
+
+    // 2. Sync Speakers (so they have identities in the graph)
+    if (config.content?.speakers) {
+      const speakerPromises = config.content.speakers.map(async (s, idx) => {
+        const email = `${s.name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+        
+        try {
+          const identity = await rhizClient.ensureIdentity({
+             email,
+             name: s.name,
+             externalUserId: `speaker_${idx}`
+          });
+          
+          if (identity.handle) (s as any).handle = identity.handle;
+          if (identity.did) (s as any).did = identity.did;
+          
+        } catch (e) {
+          console.warn(`Failed to sync speaker ${s.name}`, e);
+        }
+      });
+      syncPromises.push(...speakerPromises);
+    }
+
+    // Wait for all sync operations to complete
+    if (syncPromises.length > 0) {
+      console.log(`Rhiz: Syncing ${syncPromises.length} identities...`);
+      await Promise.all(syncPromises);
+      console.log("Rhiz: Sync complete");
     }
     
-    return config;
+    // enhance config with metadata
+    // We cast to any to avoid strict BAML type checks preventing the extra property
+    return { ...config, eventId } as EventAppConfig & { eventId: string };
 
   } catch (error: unknown) {
     // Log detailed error information

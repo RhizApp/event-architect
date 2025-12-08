@@ -13,7 +13,7 @@ import type { GraphAttendee as NetworkingAttendee } from '@/lib/types';
 import { Attendee } from '@/lib/types'; // This import is still needed for the ingestAttendees call
 
 interface EventLandingPageProps {
-  config: EventAppConfig;
+  config: EventAppConfig & { eventId?: string };
 }
 
 export function EventLandingPage({ config }: EventLandingPageProps) {
@@ -78,7 +78,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     console.log("Rhiz: Recording interaction with", attendee.person_id);
     try {
       await rhizClient.recordInteraction({
-        eventId: "default-event",
+        eventId: config.eventId || "default-event",
         fromIdentityId: currentUserId,
         toIdentityId: attendee.person_id,
         type: "view_profile",
@@ -103,7 +103,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
      console.log("Rhiz: Recording interaction with speaker", speakerId);
      try {
        await rhizClient.recordInteraction({
-         eventId: "default-event",
+         eventId: config.eventId || "default-event",
          fromIdentityId: currentUserId,
          toIdentityId: speakerId,
          type: "view_speaker",
@@ -125,40 +125,16 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         });
         setCurrentUserId(currentUser.id);
 
-        // 2. Ingest generated attendees into Protocol
-        const attendeesForIngest: Attendee[] = config.content.sampleAttendees.map(a => ({
-          id: a.id,
-          eventId: "default-event",
-          userId: a.id, 
-          rhizIdentityId: "",
-          name: a.name,
-          email: `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          tags: a.interests,
-          intents: [],
-        }));
+        if (!config.eventId) {
+          console.warn("Rhiz: No event ID provided in config, skipping Protocol sync");
+          return;
+        }
 
-        // Also ingest Speakers as People so they have IDs
-        const speakersForIngest: Attendee[] = config.content.speakers.map(s => ({
-            id: `speaker_${s.name.replace(/\s+/g, '_')}`,
-            eventId: "default-event",
-            userId: s.name,
-            rhizIdentityId: "",
-            name: s.name,
-            email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-            tags: ["Speaker", s.role],
-            company: s.company,
-            headline: s.bio,
-            intents: []
-        }));
+        const eventId = config.eventId;
 
-        await rhizClient.ingestAttendees({
-          eventId: "default-event",
-          attendees: [...attendeesForIngest, ...speakersForIngest],
-        });
-
-        // 3. Fetch real relationships for the graph
+        // 2. Fetch real relationships for the graph
         const suggestions = await rhizClient.getSuggestedConnections({
-          eventId: "default-event",
+          eventId,
           identityId: currentUser.id,
           limit: 10,
         });
@@ -166,9 +142,9 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         console.log("Rhiz: Fetched relationships", suggestions);
         setRelationships(suggestions);
 
-        // 4. Fetch Opportunity Matches (Pre-Meeting)
+        // 3. Fetch Opportunity Matches (Pre-Meeting)
         const opportunites = await rhizClient.getOpportunityMatches({
-           eventId: "default-event",
+           eventId,
            identityId: currentUser.id,
            limit: 3
         });

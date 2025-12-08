@@ -5,7 +5,7 @@ import { Attendee, Session } from "./types";
 // Initialize the Rhiz Protocol Client
 const baseUrl = process.env.NEXT_PUBLIC_RHIZ_API_URL || "http://localhost:8000";
 const getAccessToken = async () => process.env.RHIZ_API_TOKEN || null;
-const ownerId = process.env.RHIZ_OWNER_ID || "event-maker-app";
+export const ownerId = process.env.RHIZ_OWNER_ID || "event-maker-app";
 
 export const client = new RhizClient({
   baseUrl,
@@ -33,7 +33,7 @@ export const rhizClient = {
     externalUserId?: string;
     email?: string;
     name?: string;
-  }): Promise<{ id: string; externalUserId?: string; did?: string }> => {
+  }): Promise<{ id: string; externalUserId?: string; did?: string; handle?: string }> => {
     try {
       // Try to find existing person by email if provided
       if (args.email) {
@@ -51,6 +51,7 @@ export const rhizClient = {
               id: person.person_id,
               externalUserId: args.externalUserId,
               did: person.did,
+              handle: person.handle,
             };
           }
         } catch (searchError) {
@@ -74,6 +75,7 @@ export const rhizClient = {
         id: person.person_id,
         externalUserId: args.externalUserId,
         did: person.did,
+        handle: person.handle,
       };
     } catch (error) {
       console.warn("Rhiz: Failed to ensure identity, using fallback", error);

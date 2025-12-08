@@ -8,7 +8,7 @@ import { getUserFriendlyMessage } from "@/lib/errors";
 
 export default function Home() {
   const [isPending, startTransition] = useTransition();
-  const [result, setResult] = useState<EventAppConfig | null>(null);
+  const [result, setResult] = useState<(EventAppConfig & { eventId?: string }) | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [lastFormData, setLastFormData] = useState<FormData | null>(null);
