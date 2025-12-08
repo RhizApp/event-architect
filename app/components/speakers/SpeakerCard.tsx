@@ -6,9 +6,12 @@ import { User } from 'lucide-react';
 export interface Speaker {
   id?: string;
   name: string;
+  role?: string;
   company: string;
   bio: string;
   imageUrl: string;
+  handle?: string;
+  did?: string;
 }
 
 interface SpeakerCardProps {
@@ -101,7 +104,7 @@ export const SpeakerCard = ({
         </h3>
         
         <p className="text-white/60 text-sm font-medium uppercase tracking-wider mt-1 mb-2">
-          {speaker.company}
+          {speaker.role ? `${speaker.role} • ` : ''}{speaker.company}
         </p>
 
         {/* Bio Slide-up (Carousel Only or Condensed Grid) */}

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { EventAppConfig } from '@/lib/baml_client/baml_client/types';
+import { EventAppConfig } from '@/lib/types';
 import { RelationshipDetail, OpportunityMatch } from '@/lib/protocol-sdk/types';
 import { HeroSection } from '@/components/hero/HeroSection';
 import { SpeakerSpotlight } from './speakers/SpeakerSpotlight';
@@ -14,6 +14,7 @@ import { AttendeeDetailModal } from '@/components/networking/AttendeeDetailModal
 import { Speaker } from './speakers/SpeakerCard';
 import { useToast } from '@/components/ui/ToastProvider';
 import { RegistrationModal } from '@/components/registration/RegistrationModal';
+import { EventFooter } from '@/components/footer/EventFooter';
 
 interface EventLandingPageProps {
   config: EventAppConfig & { eventId?: string };
@@ -53,6 +54,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   const [graphError, setGraphError] = React.useState<Error | null>(null);
   const [userProfile, setUserProfile] = React.useState<{ name: string; email: string } | null>(null);
   const [isRegistrationOpen, setIsRegistrationOpen] = React.useState(false);
+  const [pendingCount, setPendingCount] = React.useState(0);
 
   const pendingInteractions = React.useRef<InteractionJob[]>([]);
   const queueKey = React.useMemo(
@@ -68,6 +70,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         const parsed = JSON.parse(saved) as InteractionJob[];
         if (Array.isArray(parsed)) {
           pendingInteractions.current = parsed;
+          setPendingCount(parsed.length);
         }
       }
     } catch (err) {
@@ -81,6 +84,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     } catch (err) {
       console.warn('Failed to persist interaction queue', err);
     }
+    setPendingCount(pendingInteractions.current.length);
   }, [queueKey]);
 
   // Restore saved identity
@@ -216,32 +220,46 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     syncRhiz();
   }, [syncRhiz]);
 
+  type SpeakerWithIdentity = (typeof config.content.speakers)[number] & {
+    id?: string;
+    handle?: string;
+    did?: string;
+  };
+
   const speakers = config.content.speakers.map((speaker, idx) => {
     const fallbackId = `speaker_${idx}_${speaker.name.replace(/\s+/g, '_')}`;
+    const enriched = speaker as SpeakerWithIdentity;
     return {
-      id: (speaker as any).id || fallbackId,
+      id: enriched.id || fallbackId,
       name: speaker.name,
       role: speaker.role,
       company: speaker.company,
       imageUrl: speaker.imageUrl,
       bio: speaker.bio,
-      handle: (speaker as any).handle,
-      did: (speaker as any).did,
-    } as Speaker;
+      handle: enriched.handle,
+      did: enriched.did,
+    } satisfies Speaker;
   });
 
-  const sessions = config.content.schedule.map((session) => ({
-    id: session.id,
-    time: session.time,
-    title: session.title,
-    speaker: {
-      name: session.speakerName,
-      avatar: speakers.find((s) => s.name === session.speakerName)?.imageUrl || '',
-      role: session.speakerRole,
-    },
-    track: session.track as 'Main Stage' | 'Workshop' | 'Networking',
-    isWide: session.isWide,
-  }));
+  // Extended type for internal use to include description which might be in the mock/demo data
+  type SessionWithDescription = (typeof config.content.schedule)[number] & { description?: string };
+
+  const sessions = config.content.schedule.map((session) => {
+    const s = session as SessionWithDescription;
+    return {
+      id: s.id,
+      time: s.time,
+      title: s.title,
+      description: s.description,
+      speaker: {
+        name: s.speakerName,
+        avatar: speakers.find((sp) => sp.name === s.speakerName)?.imageUrl || '',
+        role: s.speakerRole,
+      },
+      track: s.track as 'Main Stage' | 'Workshop' | 'Networking',
+      isWide: s.isWide,
+    };
+  });
 
   const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => {
     const a = attendee as unknown as ContentAttendee;
@@ -352,6 +370,14 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
             >
               {userProfile ? 'Update Profile' : 'Join the Network'}
             </button>
+            {pendingCount > 0 && (
+              <div className="mt-3 text-sm text-amber-200 flex items-center gap-2">
+                <span className="inline-flex items-center justify-center rounded-full bg-amber-500/20 text-amber-100 px-2 py-0.5 text-xs">
+                  {pendingCount} queued
+                </span>
+                <span className="text-amber-200/80">We’ll sync when connected.</span>
+              </div>
+            )}
           </div>
           <div className="relative">
             <NetworkingGraph
@@ -381,6 +407,8 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         onClose={() => setIsRegistrationOpen(false)}
         onRegister={handleRegister}
       />
+      
+      <EventFooter />
     </div>
   );
 }

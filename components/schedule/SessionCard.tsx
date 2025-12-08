@@ -10,6 +10,7 @@ export interface Session {
   track?: 'Main Stage' | 'Workshop' | 'Networking';
   // Layout hint for the grid
   isWide?: boolean; 
+  description?: string;
 }
 
 interface SessionCardProps {
@@ -17,7 +18,7 @@ interface SessionCardProps {
 }
 
 export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
-  const { title, time, speaker, track = 'Main Stage', isWide } = session;
+  const { title, time, speaker, track = 'Main Stage', isWide, description } = session;
 
   return (
     <div 
@@ -38,9 +39,16 @@ export const SessionCard: React.FC<SessionCardProps> = ({ session }) => {
 
       {/* Main Content */}
       <div className="relative z-10 flex-grow flex flex-col justify-end gap-6">
-        <h3 className={`text-xl md:text-2xl font-semibold leading-tight text-white ${styles.cardTitle}`}>
-            {title}
-        </h3>
+        <div>
+          <h3 className={`text-xl md:text-2xl font-semibold leading-tight text-white ${styles.cardTitle}`}>
+              {title}
+          </h3>
+          {description && (
+            <p className="text-gray-400 text-sm mt-2 leading-relaxed line-clamp-3">
+              {description}
+            </p>
+          )}
+        </div>
         
         {/* Speaker Line */}
         <div className="flex items-center gap-3 pt-4 border-t border-white/5">

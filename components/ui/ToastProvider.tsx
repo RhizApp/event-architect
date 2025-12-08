@@ -109,8 +109,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   );
 
   React.useEffect(() => {
+    const handles = timeouts.current;
     return () => {
-      Object.values(timeouts.current).forEach(clearTimeout);
+      Object.values(handles).forEach(clearTimeout);
     };
   }, []);
 

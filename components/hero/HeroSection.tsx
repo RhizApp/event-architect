@@ -1,6 +1,7 @@
 import React from 'react';
 import { HeroTheme, THEMES } from './theme';
 import { BackgroundSystem } from './BackgroundSystem';
+import { InteractiveNetworkBackground } from './InteractiveNetworkBackground';
 import styles from './hero.module.css';
 
 export interface HeroProps {
@@ -44,7 +45,11 @@ export const HeroSection: React.FC<HeroProps> = ({
       style={containerStyle}
     >
       {/* Background System */}
-      <BackgroundSystem theme={theme} backgroundImage={backgroundImage} />
+      {backgroundImage === 'dynamic-network' ? (
+        <InteractiveNetworkBackground />
+      ) : (
+        <BackgroundSystem theme={theme} backgroundImage={backgroundImage} />
+      )}
 
       {/* Content Container */}
       {/* Using a grid to allow for the 'Creative composition grid' requirement on desktop */}
