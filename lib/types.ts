@@ -1,3 +1,12 @@
+import { PersonRead } from "@/lib/protocol-sdk/types";
+
+// ... existing types ...
+
+export type GraphAttendee = PersonRead & {
+  imageFromUrl?: string;
+  interests?: string[];
+};
+
 export type Organization = {
   id: string;
   name: string;

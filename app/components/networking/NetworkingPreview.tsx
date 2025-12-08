@@ -5,20 +5,16 @@ import clsx from "clsx";
 import { useState } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
 import { User } from "lucide-react";
-import { RelationshipDetail, PersonRead } from "@/lib/protocol-sdk/types";
+import { RelationshipDetail } from "@/lib/protocol-sdk/types";
+import { GraphAttendee } from "@/lib/types";
 
-export interface Attendee extends PersonRead {
-  imageFromUrl?: string;
-  interests?: string[];
-}
-
-export interface NetworkingProps {
-  featuredAttendees: Attendee[];
+export interface NetworkingPreviewProps {
+  featuredAttendees: GraphAttendee[];
   relationships?: RelationshipDetail[];
   totalCount: number;
   matchmakingEnabled: boolean;
   opportunities?: unknown[]; 
-  onNodeClick?: (attendee: Attendee) => void;
+  onNodeClick?: (attendee: GraphAttendee) => void;
 }
 
 const GradientField = () => (
@@ -80,7 +76,7 @@ const AvatarNode = ({
   delayOffset,
   onClick,
 }: {
-  attendee: Attendee | null;
+  attendee: GraphAttendee | null;
   x: number;
   y: number;
   delayOffset: number;
@@ -155,17 +151,17 @@ const AvatarNode = ({
 };
 
 
-export default function NetworkingPreview({
+export function NetworkingPreview({
   featuredAttendees = [],
   relationships = [],
   totalCount,
   matchmakingEnabled,
   onNodeClick,
-}: NetworkingProps) {
+}: NetworkingPreviewProps) {
   
   // Fill with nulls if not enough attendees to make it look populated
   const [displayAttendees] = useState(() => {
-     let list: (Attendee | null)[] = [...featuredAttendees];
+     let list: (GraphAttendee | null)[] = [...featuredAttendees];
      if (list.length < 8) {
        const needed = 8 - list.length;
        list = [...list, ...Array(needed).fill(null)];
@@ -179,7 +175,7 @@ export default function NetworkingPreview({
   const orbit2 = displayAttendees.slice(orbit1Count);
 
   // Helper to find relationship strength for an attendee
-  const getStrength = (attendee: Attendee | null) => {
+  const getStrength = (attendee: GraphAttendee | null) => {
     if (!attendee) return 0;
     const rel = relationships.find(r => r.target_person_id === attendee.person_id);
     return rel ? rel.strength_score : 0;

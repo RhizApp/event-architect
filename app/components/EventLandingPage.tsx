@@ -9,7 +9,8 @@ import { NetworkingPreview } from '@/components/networking/NetworkingPreview';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import type { HeroTheme } from '@/components/hero/theme';
 import { rhizClient } from '@/lib/rhizClient';
-import { Attendee } from '@/lib/types';
+import type { GraphAttendee as NetworkingAttendee } from '@/lib/types';
+import { Attendee } from '@/lib/types'; // This import is still needed for the ingestAttendees call
 
 interface EventLandingPageProps {
   config: EventAppConfig;
@@ -28,11 +29,9 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   const theme = determineTheme(config.branding.toneKeywords);
   
   // State for live Rhiz data
-  // State for live Rhiz data
   const [relationships, setRelationships] = React.useState<RelationshipDetail[]>([]);
   const [opportunities, setOpportunities] = React.useState<{ suggestion: IntroductionSuggestion; candidate: PersonRead }[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
-  const [isSyncing, setIsSyncing] = React.useState(false);
 
   // Map generated content to component-compatible formats
   const speakers = config.content.speakers.map(speaker => ({
@@ -56,28 +55,24 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     isWide: session.isWide,
   }));
 
-  const attendees: PersonRead[] = config.content.sampleAttendees.map((attendee, i) => ({
+  // Map generated content to component-compatible formats matching Protocol types
+  const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => ({
     person_id: attendee.id || `person-${i}`,
     owner_id: "system",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     legal_name: attendee.name,
     preferred_name: attendee.name,
-    imageFromUrl: attendee.imageUrl, // We need to extend our local type or just pass it through if PersonRead doesn't have it?
-    // Note: PersonRead doesn't standardly have imageFromUrl but we can cast or extend. 
-    // For this demo, let's treat it loosely or add it to tags/metadata if we were strict.
-    // However, NetworkingPreview.tsx was updated to use PersonRead which DOES NOT have imageFromUrl on the interface normally.
-    // Wait, I replaced NetworkingPreview to use PersonRead.
-    // PersonRead does NOT have imageFromUrl in types.ts.
-    // This will error if I don't address it.
-    // Let's use 'any' cast for the image prop or add it to the type augmentation if possible, 
-    // or better, map it to a custom attribute if we were being pure. 
-    // For now, I will cast to any to pass the image prop through the "PersonRead" type for the UI to use it.
+    imageFromUrl: attendee.imageUrl, 
     tags: attendee.interests,
-  } as any as PersonRead));
+    // Add missing PersonRead required fields with defaults
+    emails: [],
+    phones: [],
+    social_handles: {},
+  }));
 
   // Handle node interaction
-  const handleNodeClick = async (attendee: Attendee) => {
+  const handleNodeClick = async (attendee: NetworkingAttendee) => {
     if (!currentUserId) return;
     
     console.log("Rhiz: Recording interaction with", attendee.person_id);
@@ -95,10 +90,34 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     }
   };
 
+  const handleSpeakerClick = async (speaker: any) => { 
+     if (!currentUserId) return;
+     
+     // We need to find the person ID for this speaker.
+     // Since we mocked ingestion, we can rely on a deterministic ID or lookup.
+     // For this demo, let's assume we can map back via name or the ID we assigned during ingestion.
+     // In the useEffect below, we'll assign IDs to speakers.
+     
+     const speakerId = speaker.id || `speaker_${speaker.name.replace(/\s+/g, '_')}`;
+
+     console.log("Rhiz: Recording interaction with speaker", speakerId);
+     try {
+       await rhizClient.recordInteraction({
+         eventId: "default-event",
+         fromIdentityId: currentUserId,
+         toIdentityId: speakerId,
+         type: "view_speaker",
+         metadata: { source: "speaker_spotlight" }
+       });
+       alert(`Interaction recorded: Viewed Speaker ${speaker.name}`);
+     } catch (e) {
+       console.error("Failed to record speaker interaction", e);
+     }
+  };
+
   // Effect: Ingest attendees & fetch relationships
   React.useEffect(() => {
     const syncRhiz = async () => {
-      setIsSyncing(true);
       try {
         // 1. Ensure current user has an identity
         const currentUser = await rhizClient.ensureIdentity({
@@ -107,25 +126,37 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         setCurrentUserId(currentUser.id);
 
         // 2. Ingest generated attendees into Protocol
-        // We map the config attendees to the format expected by ingest
         const attendeesForIngest: Attendee[] = config.content.sampleAttendees.map(a => ({
           id: a.id,
           eventId: "default-event",
-          userId: a.id, // Using ID as mock user ID
-          rhizIdentityId: "", // Will be assigned by ingestion
+          userId: a.id, 
+          rhizIdentityId: "",
           name: a.name,
-          email: `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Mock email
+          email: `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
           tags: a.interests,
           intents: [],
         }));
 
+        // Also ingest Speakers as People so they have IDs
+        const speakersForIngest: Attendee[] = config.content.speakers.map(s => ({
+            id: `speaker_${s.name.replace(/\s+/g, '_')}`,
+            eventId: "default-event",
+            userId: s.name,
+            rhizIdentityId: "",
+            name: s.name,
+            email: `${s.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+            tags: ["Speaker", s.role],
+            company: s.company,
+            headline: s.bio,
+            intents: []
+        }));
+
         await rhizClient.ingestAttendees({
           eventId: "default-event",
-          attendees: attendeesForIngest,
+          attendees: [...attendeesForIngest, ...speakersForIngest],
         });
 
         // 3. Fetch real relationships for the graph
-        // This will return connections based on the shared tags/interests we just ingested
         const suggestions = await rhizClient.getSuggestedConnections({
           eventId: "default-event",
           identityId: currentUser.id,
@@ -145,14 +176,12 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
       } catch (err) {
         console.error("Rhiz: Sync failed", err);
-      } finally {
-        setIsSyncing(false);
       }
     };
 
     // Only run if checking is enabled and we haven't run yet
     syncRhiz();
-  }, [config.content.sampleAttendees]);
+  }, [config.content.sampleAttendees, config.content.speakers]);
 
   return (
     <div className="w-full bg-white dark:bg-black min-h-screen">
@@ -168,8 +197,9 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
        
        {/* Speakers Section */}
        <SpeakerSpotlight 
-         speakers={speakers}
+         speakers={speakers.map(s => ({ ...s, id: `speaker_${s.name.replace(/\s+/g, '_')}` }))}
          layout="carousel"
+         onSpeakerClick={handleSpeakerClick}
        />
 
        {/* Schedule Section */}

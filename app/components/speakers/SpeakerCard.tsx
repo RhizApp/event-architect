@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { User } from 'lucide-react';
 
 export interface Speaker {
+  id?: string;
   name: string;
   company: string;
   bio: string;
@@ -16,6 +17,7 @@ interface SpeakerCardProps {
   className?: string;
   classNameImage?: string;
   priority?: boolean;
+  onClick?: (speaker: Speaker) => void;
 }
 
 export const SpeakerCard = ({ 
@@ -23,6 +25,7 @@ export const SpeakerCard = ({
   layout = 'grid', 
   className,
   classNameImage,
+  onClick,
 }: SpeakerCardProps) => {
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -40,6 +43,7 @@ export const SpeakerCard = ({
       animate="rest"
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={() => onClick?.(speaker)}
     >
       {/* Image Container */}
       <div className="absolute inset-0 overflow-hidden">

@@ -8,9 +8,10 @@ interface SpeakerSpotlightProps {
   speakers: Speaker[];
   layout: 'carousel' | 'grid';
   className?: string;
+  onSpeakerClick?: (speaker: Speaker) => void;
 }
 
-export function SpeakerSpotlight({ speakers, layout, className }: SpeakerSpotlightProps) {
+export function SpeakerSpotlight({ speakers, layout, className, onSpeakerClick }: SpeakerSpotlightProps) {
   if (!speakers || speakers.length === 0) {
     return <EmptyState />;
   }
@@ -25,15 +26,15 @@ export function SpeakerSpotlight({ speakers, layout, className }: SpeakerSpotlig
       </div>
 
       {layout === 'carousel' ? (
-        <CarouselLayout speakers={speakers} />
+        <CarouselLayout speakers={speakers} onSpeakerClick={onSpeakerClick} />
       ) : (
-        <GridLayout speakers={speakers} />
+        <GridLayout speakers={speakers} onSpeakerClick={onSpeakerClick} />
       )}
     </section>
   );
 }
 
-function CarouselLayout({ speakers }: { speakers: Speaker[] }) {
+function CarouselLayout({ speakers, onSpeakerClick }: { speakers: Speaker[], onSpeakerClick?: (speaker: Speaker) => void }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   
   return (
@@ -57,6 +58,7 @@ function CarouselLayout({ speakers }: { speakers: Speaker[] }) {
                   index % 3 === 0 ? "w-[280px] md:w-[340px]" : 
                   index % 3 === 1 ? "w-[260px] md:w-[300px]" : "w-[290px] md:w-[320px]"
                 )}
+                onClick={onSpeakerClick}
              />
           </div>
         ))}
@@ -65,7 +67,7 @@ function CarouselLayout({ speakers }: { speakers: Speaker[] }) {
   );
 }
 
-function GridLayout({ speakers }: { speakers: Speaker[] }) {
+function GridLayout({ speakers, onSpeakerClick }: { speakers: Speaker[], onSpeakerClick?: (speaker: Speaker) => void }) {
   return (
     <div className="container mx-auto px-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
@@ -87,6 +89,7 @@ function GridLayout({ speakers }: { speakers: Speaker[] }) {
               speaker={speaker} 
               layout="grid"
               className="w-full"
+              onClick={onSpeakerClick}
             />
           </div>
         ))}
