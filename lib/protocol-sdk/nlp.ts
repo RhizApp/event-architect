@@ -10,7 +10,9 @@ import type {
   IntroductionRequest,
   IntroductionSuggestion,
   RelationshipInsights,
-  TagSuggestions
+  TagSuggestions,
+  OpportunityMatch,
+  PersonRead
 } from './types'
 
 export interface NlpClientOptions {
@@ -98,5 +100,54 @@ export class NlpClient {
    */
   async getTags(personId: string): Promise<TagSuggestions> {
     return this.fetch<TagSuggestions>(`/v1/nlp/tags/${personId}`)
+  }
+
+  /**
+   * Find opportunity matches for a person based on shared context and goals.
+   * Currently mocks the response until backend endpoint is active.
+   */
+  async findOpportunityMatches(args: {
+    personId: string;
+    limit?: number;
+    // In a real implementation, we would pass context/event ID here
+  }): Promise<OpportunityMatch[]> {
+      // MOCK IMPLEMENTATION - To be replaced by:
+      // return this.fetch<OpportunityMatch[]>('/v1/nlp/opportunities', { method: 'POST', body: JSON.stringify(args) });
+      
+      return [
+      {
+        suggestion: {
+          match_score: 0.85,
+          reasons: ["Both interested in Generative AI", "Complementary Goals: Hiring vs Job Seeking"],
+          should_introduce: true,
+          intro_message: "You both seem interested in GenAI..."
+        },
+        candidate: {
+          person_id: "opp-1",
+          owner_id: "system",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          legal_name: "Sarah Chen",
+          preferred_name: "Sarah",
+          tags: ["AI", "Startups"]
+        } as PersonRead
+      },
+      {
+         suggestion: {
+           match_score: 0.65,
+           reasons: ["Shared Industry: Fintech", "Attending same workshops"],
+           should_introduce: true,
+         },
+         candidate: {
+           person_id: "opp-2",
+           owner_id: "system",
+           created_at: new Date().toISOString(),
+           updated_at: new Date().toISOString(),
+           legal_name: "David Miller",
+           preferred_name: "Dave",
+           tags: ["Fintech"]
+         } as PersonRead
+      }
+    ];
   }
 }

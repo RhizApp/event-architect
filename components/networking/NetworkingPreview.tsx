@@ -3,24 +3,24 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { OrbitRing } from "./OrbitRing";
+import { ConnectionEdge } from "./ConnectionEdge";
 import { rhizMotion, rhizEasings } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 import Image from "next/image";
+import { ConnectionSuggestion } from "@/lib/types"; // Keeping for reference if needed elsewhere, or remove if unused locally
+import { PersonRead, RelationshipDetail, IntroductionSuggestion } from "@/lib/protocol-sdk/types";
 
 // --- Types ---
+// We now use Protocol Types directly
 
-export interface Attendee {
-  id: string;
-  imageFromUrl: string;
-  interests: string[];
-  name?: string; // Optional name/initials
-}
 
 export interface NetworkingProps {
-  featuredAttendees: Attendee[];
+  featuredAttendees: PersonRead[];
   totalCount: number;
   matchmakingEnabled: boolean;
+  relationships?: RelationshipDetail[];
+  opportunities?: { suggestion: IntroductionSuggestion; candidate: PersonRead }[];
   className?: string;
 }
 
@@ -49,12 +49,14 @@ const AvatarNode = ({
   attendee, 
   angle, 
   radius,
-  eccentricity = 0
+  eccentricity = 0,
+  variant = "default"
 }: { 
-  attendee: Attendee; 
+  attendee: PersonRead; 
   angle: number; 
   radius: number;
   eccentricity?: number;
+  variant?: "default" | "opportunity";
 }) => {
   // Convert polar to cartesian with eccentricity for elliptic placement
   const radian = (angle * Math.PI) / 180;
@@ -101,34 +103,23 @@ const AvatarNode = ({
         </div>
 
         {/* Avatar Image */}
-        <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-110 transition-transform duration-300">
-          {attendee.imageFromUrl ? (
-            <Image 
-              src={attendee.imageFromUrl} 
-              alt={attendee.name || "Attendee"} 
-              width={48} 
-              height={48} 
-              className="object-cover w-full h-full"
-              onError={(e) => {
-                // Determine fallback logic if needed
-                const target = e.target as HTMLElement;
-                target.style.display = 'none';
-                const sibling = target.nextElementSibling;
-                if (sibling) sibling.classList.remove('hidden');
-              }}
-            />
-          ) : null}
-          
-          {/* Fallback (Hidden by default if image exists, or shown if logic dictates) */}
-          <div className={cn("absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900", attendee.imageFromUrl && "hidden")}>
+        <div className={cn(
+          "relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border shadow-lg group-hover:scale-110 transition-transform duration-300",
+          variant === "opportunity" ? "border-emerald-400/50 border-dashed" : "border-white/10"
+        )}>
+          {variant === "opportunity" && (
+             <div className="absolute inset-0 bg-emerald-500/10 animate-pulse" />
+          )}
+          {/* We assume a profile image might be in tags or social handles for now, or fallback */}
+          <div className={cn("absolute inset-0 flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900")}>
              <span className="text-xs font-medium text-white/80">
-               {(attendee.name || attendee.id).slice(0, 2).toUpperCase()}
+               {(attendee.preferred_name || attendee.legal_name || "??").slice(0, 2).toUpperCase()}
              </span>
           </div>
         </div>
 
-        {/* Optional Interest Dot */}
-        {attendee.interests.length > 0 && (
+        {/* Optional Interest Dot - Check tags for interests */}
+        {attendee.tags && attendee.tags.length > 0 && (
           <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full bg-teal-400 border border-black shadow-sm" />
         )}
       </div>
@@ -155,26 +146,55 @@ export const NetworkingPreview: React.FC<NetworkingProps> = ({
   featuredAttendees,
   totalCount,
   matchmakingEnabled,
+  relationships,
+  opportunities,
   className
 }) => {
   // Graceful Degradation: Generate placeholders if empty
   const activeAttendees = useMemo(() => {
     if (featuredAttendees && featuredAttendees.length > 0) return featuredAttendees;
     
-    // Generate placeholders
+    // Generate placeholders if empty
     return Array.from({ length: 7 }).map((_, i) => ({
-      id: `placeholder-${i}`,
-      imageFromUrl: "",
-      name: ["Alex", "Sam", "Jordan", "Taylor", "Casey", "Riley", "Morgan"][i],
-      interests: i % 2 === 0 ? ["Tech"] : []
-    }));
+      person_id: `placeholder-${i}`,
+      owner_id: "system",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      preferred_name: ["Alex", "Sam", "Jordan", "Taylor", "Casey", "Riley", "Morgan"][i],
+      tags: i % 2 === 0 ? ["Tech"] : []
+    } as PersonRead));
   }, [featuredAttendees]);
 
-  // Distribute into orbits
-  // Ring 1: Inner (Small) - 3 items
-  // Ring 2: Outer (Large) - Remainder
-  const ring1 = activeAttendees.slice(0, 3);
-  const ring2 = activeAttendees.slice(3, 10); // Cap at some reasonable number
+  // Distribute into orbits based on Relationship Score if available
+  // Ring 1: Inner (High Relevance / Score > 0.6)
+  // Ring 2: Outer (Lower Relevance)
+  
+  const ring1: PersonRead[] = [];
+  const ring2: PersonRead[] = [];
+
+  if (relationships && relationships.length > 0) {
+    // If we have real relationship data, use it for sorting
+    activeAttendees.forEach(attendee => {
+      const rel = relationships.find(r => r.target_person_id === attendee.person_id);
+      const score = rel?.strength_score || 0;
+      
+      if (score > 0.6) {
+        ring1.push(attendee);
+      } else {
+        ring2.push(attendee);
+      }
+    });
+
+    // If Ring 1 is too crowded (> 4), move excess to Ring 2
+    if (ring1.length > 4) {
+      const overflow = ring1.splice(4);
+      ring2.unshift(...overflow);
+    }
+  } else {
+    // Default fallback distribution
+    ring1.push(...activeAttendees.slice(0, 3));
+    ring2.push(...activeAttendees.slice(3, 10));
+  }
 
   return (
     <div className={cn("relative w-full h-[400px] flex items-center justify-center overflow-hidden bg-black/5 dark:bg-black/40 rounded-3xl border border-white/5", className)}>
@@ -182,7 +202,7 @@ export const NetworkingPreview: React.FC<NetworkingProps> = ({
 
       {/* Center Text Node */}
       <div className="relative z-20 flex flex-col items-center justify-center text-center p-6 mix-blend-plus-lighter">
-        <span className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white to-white/60 drop-shadow-sm">
+        <span className="text-4xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-b from-white to-white/60 drop-shadow-sm">
           {totalCount}+
         </span>
         <span className="text-sm font-medium text-white/40 mt-1 tracking-[0.2em] uppercase text-[10px]">
@@ -203,28 +223,74 @@ export const NetworkingPreview: React.FC<NetworkingProps> = ({
       
       {/* Inner Ring - Slow Orbit */}
       <OrbitRing radius={110} duration={60} direction="clockwise" eccentricity={0.05} variant="continuous">
-        {ring1.map((attendee, i) => (
-          <AvatarNode 
-            key={attendee.id} 
-            attendee={attendee} 
-            angle={(360 / ring1.length) * i} 
-            radius={110} 
-            eccentricity={0.05}
-          />
-        ))}
+        {ring1.map((attendee, i) => {
+          // Lookup score for edge visualization
+          const rel = relationships?.find(r => r.target_person_id === attendee.person_id);
+          const score = rel?.strength_score || 0;
+          const angle = (360 / ring1.length) * i;
+
+          return (
+            <React.Fragment key={attendee.person_id}>
+              <ConnectionEdge 
+                startY={0} startX={0} // Center relative
+                endX={0} endY={0} // Not used currently as line is drawn to radius
+                orbitRadius={110}
+                orbitAngle={angle}
+                score={score}
+              />
+              <AvatarNode 
+                attendee={attendee} 
+                angle={angle} 
+                radius={110} 
+                eccentricity={0.05}
+              />
+            </React.Fragment>
+          );
+        })}
       </OrbitRing>
 
       {/* Outer Ring - Slower Reverse Orbit */}
       {ring2.length > 0 && (
+
          <OrbitRing radius={170} duration={80} direction="counter-clockwise" eccentricity={0.08} delay={0.5} variant="continuous">
-            {ring2.map((attendee, i) => (
-              <AvatarNode 
-                key={attendee.id} 
-                attendee={attendee} 
-                angle={(360 / ring2.length) * i + 45} // Offset angle
-                radius={170}
-                eccentricity={0.08} 
-              />
+            {ring2.map((attendee, i) => {
+              const rel = relationships?.find(r => r.target_person_id === attendee.person_id);
+              const score = rel?.strength_score || 0;
+              const angle = (360 / ring2.length) * i + 45;
+
+              return (
+              <React.Fragment key={attendee.person_id}>
+                 <ConnectionEdge 
+                    startY={0} startX={0}
+                    endX={0} endY={0}
+                    orbitRadius={170}
+                    orbitAngle={angle}
+                    score={score}
+                 />
+                 <AvatarNode 
+                    attendee={attendee} 
+                    angle={angle} 
+                    radius={170}
+                    eccentricity={0.08} 
+                 />
+              </React.Fragment>
+              );
+            })}
+         </OrbitRing>
+      )}
+
+      {/* Opportunity Field - Deep Outer Orbit (Ghost/Potential) */}
+      {opportunities && opportunities.length > 0 && (
+         <OrbitRing radius={220} duration={120} direction="clockwise" eccentricity={0.12} delay={1.5} variant="continuous">
+            {opportunities.map((opp, i) => (
+               <AvatarNode
+                 key={opp.candidate.person_id}
+                 attendee={opp.candidate}
+                 angle={(360 / opportunities.length) * i + 90}
+                 radius={220}
+                 eccentricity={0.12}
+                 variant="opportunity"
+               />
             ))}
          </OrbitRing>
       )}

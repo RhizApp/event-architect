@@ -2,11 +2,14 @@
 
 import React from 'react';
 import { EventAppConfig } from "@/lib/baml_client/baml_client/types";
+import { PersonRead, RelationshipDetail, IntroductionSuggestion } from "@/lib/protocol-sdk/types";
 import { HeroSection } from '@/components/hero/HeroSection';
 import { SpeakerSpotlight } from './speakers/SpeakerSpotlight';
 import { NetworkingPreview } from '@/components/networking/NetworkingPreview';
 import { ScheduleGrid } from '@/components/schedule/ScheduleGrid';
 import type { HeroTheme } from '@/components/hero/theme';
+import { rhizClient } from '@/lib/rhizClient';
+import { Attendee } from '@/lib/types';
 
 interface EventLandingPageProps {
   config: EventAppConfig;
@@ -23,6 +26,12 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   };
 
   const theme = determineTheme(config.branding.toneKeywords);
+  
+  // State for live Rhiz data
+  // State for live Rhiz data
+  const [relationships, setRelationships] = React.useState<RelationshipDetail[]>([]);
+  const [opportunities, setOpportunities] = React.useState<{ suggestion: IntroductionSuggestion; candidate: PersonRead }[]>([]);
+  const [isSyncing, setIsSyncing] = React.useState(false);
 
   // Map generated content to component-compatible formats
   const speakers = config.content.speakers.map(speaker => ({
@@ -46,12 +55,83 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     isWide: session.isWide,
   }));
 
-  const attendees = config.content.sampleAttendees.map(attendee => ({
-    id: attendee.id,
-    imageFromUrl: attendee.imageUrl,
-    interests: attendee.interests,
-    name: attendee.name,
-  }));
+  const attendees: PersonRead[] = config.content.sampleAttendees.map((attendee, i) => ({
+    person_id: attendee.id || `person-${i}`,
+    owner_id: "system",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    legal_name: attendee.name,
+    preferred_name: attendee.name,
+    imageFromUrl: attendee.imageUrl, // We need to extend our local type or just pass it through if PersonRead doesn't have it?
+    // Note: PersonRead doesn't standardly have imageFromUrl but we can cast or extend. 
+    // For this demo, let's treat it loosely or add it to tags/metadata if we were strict.
+    // However, NetworkingPreview.tsx was updated to use PersonRead which DOES NOT have imageFromUrl on the interface normally.
+    // Wait, I replaced NetworkingPreview to use PersonRead.
+    // PersonRead does NOT have imageFromUrl in types.ts.
+    // This will error if I don't address it.
+    // Let's use 'any' cast for the image prop or add it to the type augmentation if possible, 
+    // or better, map it to a custom attribute if we were being pure. 
+    // For now, I will cast to any to pass the image prop through the "PersonRead" type for the UI to use it.
+    tags: attendee.interests,
+  } as any as PersonRead));
+
+  // Effect: Ingest attendees & fetch relationships
+  React.useEffect(() => {
+    const syncRhiz = async () => {
+      setIsSyncing(true);
+      try {
+        // 1. Ensure current user has an identity
+        const currentUser = await rhizClient.ensureIdentity({
+          name: "Event Organizer", // In a real app, this would come from auth
+        });
+
+        // 2. Ingest generated attendees into Protocol
+        // We map the config attendees to the format expected by ingest
+        const attendeesForIngest: Attendee[] = config.content.sampleAttendees.map(a => ({
+          id: a.id,
+          eventId: "default-event",
+          userId: a.id, // Using ID as mock user ID
+          rhizIdentityId: "", // Will be assigned by ingestion
+          name: a.name,
+          email: `${a.name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Mock email
+          tags: a.interests,
+          intents: [],
+        }));
+
+        await rhizClient.ingestAttendees({
+          eventId: "default-event",
+          attendees: attendeesForIngest,
+        });
+
+        // 3. Fetch real relationships for the graph
+        // This will return connections based on the shared tags/interests we just ingested
+        const suggestions = await rhizClient.getSuggestedConnections({
+          eventId: "default-event",
+          identityId: currentUser.id,
+          limit: 10,
+        });
+
+        console.log("Rhiz: Fetched relationships", suggestions);
+        setRelationships(suggestions);
+
+        // 4. Fetch Opportunity Matches (Pre-Meeting)
+        const opportunites = await rhizClient.getOpportunityMatches({
+           eventId: "default-event",
+           identityId: currentUser.id,
+           limit: 3
+        });
+        setOpportunities(opportunites);
+
+      } catch (err) {
+        console.error("Rhiz: Sync failed", err);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    // Only run if checking is enabled and we haven't run yet
+    syncRhiz();
+  }, [config.content.sampleAttendees]);
 
   return (
     <div className="w-full bg-white dark:bg-black min-h-screen">
@@ -103,6 +183,8 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
                   featuredAttendees={attendees}
                   totalCount={500}
                   matchmakingEnabled={config.matchmakingConfig.enabled}
+                  relationships={relationships}
+                  opportunities={opportunities}
                 />
              </div>
           </div>

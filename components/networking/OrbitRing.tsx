@@ -48,7 +48,7 @@ export const OrbitRing: React.FC<OrbitRingProps> = ({
         repeat: Infinity,
         ease: "linear",
         delay: delay,
-      }
+      } as any
     }
   };
 

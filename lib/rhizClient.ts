@@ -1,5 +1,6 @@
-import { RhizClient, InteractionCreate, PeopleClient, PersonCreate } from "./protocol-sdk";
-import { Attendee, ConnectionSuggestion, Session } from "./types";
+import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient } from "./protocol-sdk";
+import { RelationshipDetail, IntroductionSuggestion, OpportunityMatch } from "./protocol-sdk/types";
+import { Attendee, Session } from "./types";
 
 // Initialize the Rhiz Protocol Client
 const baseUrl = process.env.NEXT_PUBLIC_RHIZ_API_URL || "http://localhost:8000";
@@ -13,6 +14,12 @@ export const client = new RhizClient({
 
 // Initialize People Client for identity management
 export const peopleClient = new PeopleClient({
+  baseUrl,
+  getAccessToken,
+});
+
+// Initialize NLP Client for intelligence
+export const nlpClient = new NlpClient({
   baseUrl,
   getAccessToken,
 });
@@ -111,7 +118,7 @@ export const rhizClient = {
     eventId: string;
     identityId: string;
     limit?: number;
-  }): Promise<ConnectionSuggestion[]> => {
+  }): Promise<RelationshipDetail[]> => {
     try {
       // Get relationships sorted by strength
       const response = await client.listRelationships({
@@ -123,37 +130,40 @@ export const rhizClient = {
         min_strength: 0.2, // Only show meaningful relationships
       });
       
-      // Map to ConnectionSuggestion with rich data
-      return response.relationships.map(rel => {
-        // Generate reason based on strength score
-        let reasonSummary = "New connection";
-        if (rel.strength_score >= 0.7) {
-          reasonSummary = "Strong existing relationship";
-        } else if (rel.strength_score >= 0.4) {
-          reasonSummary = "Moderate connection with growth potential";
-        } else if (rel.strength_score >= 0.2) {
-          reasonSummary = "Emerging connection";
-        }
-
-        // Add interaction context if available
-        if (rel.interaction_count > 10) {
-          reasonSummary += ` (${rel.interaction_count} interactions)`;
-        }
-
-        return {
-          targetAttendeeId: rel.target_person_id,
-          score: rel.strength_score,
-          reasonSummary,
-          sharedTags: [], // Could be populated from relationship metadata
-          sharedIntents: [], // Could be populated from context tags
-          talkingPoints: rel.latest_interaction_at 
-            ? [`Last interaction: ${new Date(rel.latest_interaction_at).toLocaleDateString()}`]
-            : [],
-        };
-      });
+      // Return the relationships directly as Protocol Types
+      // We perform a cast here because the SDK currently returns RelationshipRead[] 
+      // but in a real scenario we'd query the detail endpoint or enrich it.
+      // For now, we'll map what we have to RelationshipDetail structure
+      
+      return response.relationships.map(rel => ({
+        ...rel,
+        interaction_count: rel.frequency_score * 10, // Mock derivation
+        latest_interaction_at: rel.last_interaction_at
+      } as RelationshipDetail));
     } catch (error) {
       console.warn("Rhiz: Failed to get connection suggestions", error);
       return []; // Graceful degradation
+    }
+  },
+
+  /**
+   * Get potential matches (opportunities) for people you haven't met yet.
+   * Uses NlpClient.suggestIntroduction under the hood.
+   */
+  getOpportunityMatches: async (args: {
+    eventId: string;
+    identityId: string;
+    limit?: number;
+  }): Promise<OpportunityMatch[]> => {
+    try {
+      // Delegate to the Protocol's NLP Engine
+      return await nlpClient.findOpportunityMatches({
+        personId: args.identityId,
+        limit: args.limit
+      });
+    } catch (error) {
+      console.warn("Rhiz: Failed to get opportunity matches", error);
+      return [];
     }
   },
 

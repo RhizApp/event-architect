@@ -603,6 +603,11 @@ export interface TagSuggestions {
   confidence: number;
 }
 
+export interface OpportunityMatch {
+   suggestion: IntroductionSuggestion;
+   candidate: PersonRead;
+}
+
 // ============================================================
 // Channels Types
 // ============================================================

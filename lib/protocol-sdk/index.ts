@@ -19,6 +19,9 @@ export type { OrganizationsClientOptions } from './organizations';
 export { GoalsClient } from './goals';
 export type { GoalsClientOptions } from './goals';
 
+export { NlpClient } from './nlp';
+export type { NlpClientOptions } from './nlp';
+
 export { AgentsClient } from './agents';
 export type { AgentsClientOptions } from './agents';
 
