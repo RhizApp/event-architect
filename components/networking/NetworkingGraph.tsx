@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import clsx from "clsx";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
 import { User, AlertCircle, RefreshCw } from "lucide-react";
 import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
@@ -152,6 +152,7 @@ const AvatarNode = ({
       <button 
         onClick={onClick}
         tabIndex={0}
+        aria-label={attendee ? `View profile of ${attendee.preferred_name}` : "Empty slot"}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -257,39 +258,33 @@ export function NetworkingGraph({
   
   const [isMobile, setIsMobile] = useState(false);
   
-  // Simple check for mobile on mount
-  // Note: hydration mismatch possible if we render different things based on this, 
-  // so we start false and update.
-  if (typeof window !== 'undefined') {
-      // safe to check? no, still useEffect better.
-  }
-
-  // Update radius based on screen size
-  const orbit1Radius = isMobile ? 100 : 140;
-  const orbit2Radius = isMobile ? 180 : 260;
-
-  // Use ResizeObserver for robustness or simple event listener
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    // Initial check
-    checkMobile();
+    checkMobile(); // Initial check
     
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Responsive radii
+  const orbit1Radius = isMobile ? 80 : 140; // Smaller on mobile
+  const orbit2Radius = isMobile ? 140 : 260; 
+
+  // Limit visible attendees on mobile to prevent clutter
+  const maxAttendees = isMobile ? 6 : 10;
+  
   // Fill with nulls if not enough attendees to make it look populated
-  const [displayAttendees] = useState(() => {
-     let list: (GraphAttendee | null)[] = [...featuredAttendees];
+  const displayAttendees = useMemo(() => {
+     let list: (GraphAttendee | null)[] = featuredAttendees.slice(0, maxAttendees);
      if (list.length < 8) {
        const needed = 8 - list.length;
        list = [...list, ...Array(needed).fill(null)];
      }
      return list;
-  });
+  }, [featuredAttendees, maxAttendees]);
 
   // Split into 2 orbits
-  const orbit1Count = Math.ceil(displayAttendees.length * 0.4); // ~40% inner
+  const orbit1Count = Math.ceil(displayAttendees.length * 0.4); 
   const orbit1 = displayAttendees.slice(0, orbit1Count);
   const orbit2 = displayAttendees.slice(orbit1Count);
 
@@ -322,11 +317,14 @@ export function NetworkingGraph({
           >
              {/* Orbit 1 - Inner */}
             <motion.div
-               className="absolute w-[200px] h-[200px] md:w-[400px] md:h-[400px] rounded-full border border-white/5"
+               className={clsx(
+                 "absolute rounded-full border border-white/5",
+                 isMobile ? "w-[160px] h-[160px]" : "w-[280px] h-[280px] md:w-[400px] md:h-[400px]" // Dynamic sizing classes
+               )}
                animate={{ rotate: 360 }}
                transition={TRANSITIONS.orbit(60)}
             >
-                 {orbit1.map((attendee, i) => {
+                 {orbit1.map((attendee: GraphAttendee | null, i: number) => {
                      const angle = (i / orbit1.length) * 360;
                  const radian = (angle * Math.PI) / 180;
                  const x = Math.cos(radian) * orbit1Radius; 
@@ -350,11 +348,14 @@ export function NetworkingGraph({
 
          {/* Orbit 2 - Outer */}
          <motion.div
-           className="absolute w-[360px] h-[360px] md:w-[720px] md:h-[720px] rounded-full border border-white/5"
+           className={clsx(
+             "absolute rounded-full border border-white/5",
+             isMobile ? "w-[280px] h-[280px]" : "w-[520px] h-[520px] md:w-[720px] md:h-[720px]"
+           )}
            animate={{ rotate: -360 }}
            transition={TRANSITIONS.orbit(90)}
         >
-            {orbit2.map((attendee, i) => {
+            {orbit2.map((attendee: GraphAttendee | null, i: number) => {
                  const angle = (i / orbit2.length) * 360;
                  const radian = (angle * Math.PI) / 180;
                  const x = Math.cos(radian) * orbit2Radius; // radius

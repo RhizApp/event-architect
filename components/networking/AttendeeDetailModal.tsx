@@ -57,6 +57,9 @@ export function AttendeeDetailModal({
 
           {/* Modal Container */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-attendee-name"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -94,7 +97,7 @@ export function AttendeeDetailModal({
 
               {/* Identity */}
               <div className="space-y-1 mb-6">
-                <h3 className="text-2xl font-semibold text-white">
+                <h3 id="modal-attendee-name" className="text-2xl font-semibold text-white">
                   {attendee.preferred_name}
                 </h3>
                 {attendee.handle && (
