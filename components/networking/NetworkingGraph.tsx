@@ -210,6 +210,38 @@ export function NetworkingGraph({
   opportunities = [],
   onNodeClick,
   isLoading = false,
+// New Error State Component
+const GraphErrorState = ({ onRetry }: { onRetry?: () => void }) => (
+  <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-center px-4">
+    <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4 border border-red-500/20">
+      <AlertCircle className="w-8 h-8 text-red-400" />
+    </div>
+    <h3 className="text-lg font-medium text-white mb-2">Connection Error</h3>
+    <p className="text-zinc-400 text-sm mb-6 max-w-xs">
+      Unable to load networking graph. This might be a temporary issue.
+    </p>
+    {onRetry && (
+      <button 
+        onClick={onRetry}
+        className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white text-sm rounded-full transition-colors border border-zinc-700"
+      >
+        <RefreshCw size={14} />
+        Retry Connection
+      </button>
+    )}
+  </div>
+);
+
+export function NetworkingGraph({
+  featuredAttendees = [],
+  relationships = [],
+  totalCount,
+  matchmakingEnabled,
+  opportunities = [],
+  onNodeClick,
+  isLoading = false,
+  error,
+  onRetry,
 }: NetworkingGraphProps) {
   
   // Helper to determine radius based on screen size (simplified for this context)
