@@ -139,10 +139,13 @@ export async function generateEventConfig(formData: FormData) {
         console.log(`Rhiz: Bulk sync complete. Created: ${result.created}`);
         
         // Map back the generated identity data (handles/DIDs) to the config content
-        // This ensures the frontend displays the correct handle immediately
+        // This ensures the frontend displays the correct handle immediately AND has the correct Protocol ID
         result.attendees.forEach(ingested => {
            const original = config.content.sampleAttendees.find(a => a.id === ingested.externalUserId);
            if (original) {
+               // Update the ID to match the Protocol ID so relationships map correctly
+               original.id = ingested.id;
+               
                // We cast to any because the BAML type might not explicitly allow handle/did yet
                (original as any).handle = ingested.handle;
                (original as any).did = ingested.did;
