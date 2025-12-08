@@ -147,9 +147,15 @@ const AvatarNode = ({
         }
       }}
     >
-      {/* Node Frame */}
       <button 
         onClick={onClick}
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick?.();
+          }
+        }}
         className={clsx(
           "relative w-10 h-10 md:w-14 md:h-14 rounded-full p-[1px] transition-transform duration-300 hover:scale-110 focus:outline-hidden focus:ring-2 focus:ring-blue-500/50",
           isMatch ? "bg-gradient-to-b from-amber-400 to-amber-600 shadow-amber-500/50" : "bg-gradient-to-b from-white/20 to-white/5",

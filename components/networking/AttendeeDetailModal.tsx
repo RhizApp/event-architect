@@ -3,6 +3,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, MessageCircle } from "lucide-react";
+import clsx from "clsx";
 import Image from "next/image";
 import { GraphAttendee } from "@/lib/types";
 
@@ -10,13 +11,35 @@ interface AttendeeDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   attendee: GraphAttendee | null;
+  onConnect?: (attendee: GraphAttendee) => Promise<void>; 
 }
 
 export function AttendeeDetailModal({
   isOpen,
   onClose,
   attendee,
+  onConnect,
 }: AttendeeDetailModalProps) {
+  const [connectionStatus, setConnectionStatus] = React.useState<"idle" | "pending" | "connected">("idle");
+
+  // Reset state when modal opens/changes attendee
+  React.useEffect(() => {
+    if (isOpen) setConnectionStatus("idle");
+  }, [isOpen, attendee]);
+
+  const handleConnectClick = async () => {
+    if (!attendee || !onConnect) return;
+    
+    setConnectionStatus("pending");
+    try {
+      await onConnect(attendee);
+      setConnectionStatus("connected");
+    } catch (error) {
+       console.error("Connection failed", error);
+       setConnectionStatus("idle"); // Retry allowed
+    }
+  };
+
   if (!attendee) return null;
 
   return (
@@ -77,7 +100,7 @@ export function AttendeeDetailModal({
                 {attendee.handle && (
                   <p className="text-indigo-400 font-medium">@{attendee.handle}</p>
                 )}
-                {/* Fallback role if not available in data yet */}
+                {/* Fallback role */}
                 <p className="text-zinc-400 text-sm">Event Attendee</p>
               </div>
 
@@ -99,11 +122,25 @@ export function AttendeeDetailModal({
                 {/* Actions */}
                 <div className="flex gap-3 mt-8 pt-6 border-t border-white/5">
                   <button 
-                    onClick={() => alert("Connecting logic pending...")}
-                    className="flex-1 py-2.5 bg-white text-black text-sm font-semibold rounded-lg hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2"
+                    onClick={handleConnectClick}
+                    disabled={connectionStatus !== "idle"}
+                    className={clsx(
+                        "flex-1 py-2.5 text-sm font-semibold rounded-lg flex items-center justify-center gap-2 transition-all",
+                        connectionStatus === "connected" 
+                            ? "bg-green-500/20 text-green-400 border border-green-500/50"
+                            : "bg-white text-black hover:bg-neutral-200"
+                    )}
                   >
-                     <User size={16} />
-                     Connect
+                     {connectionStatus === "pending" ? (
+                         <span className="animate-pulse">Connecting...</span>
+                     ) : connectionStatus === "connected" ? (
+                         <>✓ Connected</>
+                     ) : (
+                         <>
+                            <User size={16} />
+                            Connect
+                         </>
+                     )}
                   </button>
                   <button className="flex-1 py-2.5 bg-zinc-800 text-white text-sm font-semibold rounded-lg hover:bg-zinc-700 transition-colors border border-white/5 flex items-center justify-center gap-2">
                      <MessageCircle size={16} />

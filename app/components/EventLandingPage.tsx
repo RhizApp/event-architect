@@ -98,7 +98,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
     if (!currentUserId) return;
     
-    console.log("Rhiz: Recording interaction with", attendee.person_id);
+    // Log view
     try {
       await rhizClient.recordInteraction({
         eventId: config.eventId || "default-event",
@@ -107,10 +107,34 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
         type: "view_profile",
         metadata: { source: "networking_graph" }
       });
-      // alert(`Interaction recorded: Viewed ${attendee.preferred_name || 'Attendee'}`); // Removed alert
     } catch (e) {
       console.error("Failed to record interaction", e);
     }
+  };
+
+  const handleConnect = async (attendee: NetworkingAttendee) => {
+    if (!currentUserId) {
+        alert("You must be logged in to connect.");
+        return;
+    }
+
+    console.log("Rhiz: Initiating connection with", attendee.person_id);
+    
+    // In a full implementation, this might call a specific `createRelationship` endpoint
+    // For now, we record a high-intent interaction which the Protocol converts to a relationship lead
+    await rhizClient.recordInteraction({
+        eventId: config.eventId || "default-event",
+        fromIdentityId: currentUserId,
+        toIdentityId: attendee.person_id,
+        type: "connection_request",
+        metadata: { 
+            source: "attendee_modal",
+            status: "pending"
+        }
+    });
+
+    // Simulate network delay for UX
+    await new Promise(resolve => setTimeout(resolve, 800));
   };
 
   const handleSpeakerClick = async (speaker: Speaker) => { 
@@ -251,6 +275,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
          isOpen={isModalOpen}
          onClose={() => setIsModalOpen(false)}
          attendee={selectedAttendee}
+         onConnect={handleConnect}
        />
     </div>
   );
