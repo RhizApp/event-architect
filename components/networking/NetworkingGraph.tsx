@@ -5,7 +5,7 @@ import Image from "next/image";
 import clsx from "clsx";
 import { useState, useEffect } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
-import { User } from "lucide-react";
+import { User, AlertCircle, RefreshCw } from "lucide-react";
 import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
 import { GraphAttendee } from "@/lib/types";
 
@@ -17,6 +17,8 @@ export interface NetworkingGraphProps {
   opportunities?: OpportunityMatch[]; 
   onNodeClick?: (attendee: GraphAttendee) => void;
   isLoading?: boolean;
+  error?: Error | null;
+  onRetry?: () => void;
 }
 
 const GradientField = () => (
