@@ -106,7 +106,7 @@ const EdgeLine = ({
       {/* Active Pulse Packet */}
       {strength > 0.5 && (
         <motion.circle r="2" fill="#60A5FA">
-            <motion.animateMotion 
+            <animateMotion 
                path={`M0,0 L${x},${y}`}
                dur={`${4 - strength * 2}s`} 
                repeatCount="indefinite"
