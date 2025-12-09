@@ -185,7 +185,7 @@ export function AiCapabilities() {
   const [selectedCap, setSelectedCap] = useState<Capability | null>(null);
 
   return (
-    <div className="space-y-6 mt-12 animate-fade-in" style={{ animationDelay: '400ms' }}>
+    <div className="space-y-6 animate-fade-in" style={{ animationDelay: '400ms' }}>
       <h3 className="text-xs font-mono text-surface-500 uppercase tracking-widest pl-2 border-l-2 border-brand-500/50">
         AI Intelligence Suite
       </h3>
