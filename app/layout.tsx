@@ -24,12 +24,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    console.error("Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables!");
+  }
+
   return (
     <html lang="en">
       <body
         className={`${outfit.variable} ${inter.variable} antialiased tracking-tight`}
       >
-        <ClerkProvider>
+        <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           <Providers>{children}</Providers>
         </ClerkProvider>
       </body>
