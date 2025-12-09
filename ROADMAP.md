@@ -1,59 +1,72 @@
-# Roadmap
+# Strategic Roadmap: The GatherX Execution Plan
 
-## 1. Rhiz Protocol Application Wiring (Immediate Focus)
+**Objective:** Transform from "Event Builder" to "The Identity Layer for Events."
+**Focus:** Speed, Simplicity, Intelligence.
+**Context:** GatherX is the App. Rhiz is the Protocol.
 
-The SDK wrappers (`lib/rhizClient.ts`) are implemented. We now need to wire them into the application flow to make the data "live".
+---
 
-- [ ] **Data Ingestion**
+## 1. THE LUMA KILLER: "Instant Launch" Flow (Priority: CRITICAL)
 
-  - [x] Call `rhizClient.ingestAttendees` when an event is finalized or loaded, populating the Protocol with the AI-generated attendees.
-  - [x] Ensure the current user has a Protocol Identity (`ensureIdentity`).
+_Target: Free Tier / Viral Growth_
 
-- [ ] **Live Networking Graph**
+- [ ] **The "3-Field" Creator**
+  - Build a simplified `CreateEventModal` for GatherX that bypasses the complex Wizard.
+  - Inputs: Title, Date/Time, Location.
+  - Action: Generates a published URL (e.g. `gatherx.io/e/...`) immediately using a default "Glass" template.
+- [ ] **The "Luma Import" Tool**
+  - Input field: "Paste Luma/Eventbrite URL".
+  - Backend: Scrape OG tags and schema.org data to pre-fill the "3-Field" creator.
+- [ ] **Viral "Clone" Loop**
+  - Update Footer on all Free Events: "Powered by GatherX – Host your own."
+  - Action: Clicking "Host your own" opens the 3-Field Creator _overlaying_ the current page.
 
-  - [x] Fetch real relationships using `rhizClient.getSuggestedConnections`.
-  - [x] Update `EventLandingPage` (or a wrapper) to pass this live data to `NetworkingPreview`.
-  - [x] Visualize "Edges": connection lines between nodes based on `strength_score`.
+## 2. THE REVENUE ENGINE: "Studio Mode" Gates
 
-- [ ] **Interaction Tracking**
-  - [x] Call `rhizClient.recordInteraction` when users click on speakers or attendees.
+_Target: Pro Tier / Monetization_
 
-## 2. Graph Polish & Interactivity
+- [ ] **Visual Paywalls**
+  - Show "Edit Layout," "add Page," and "Custom Domain" buttons in the builder UI.
+  - Action: Clicking them triggers the `UpgradePlanModal`.
+- [ ] **The "Architect" Lock**
+  - Refactor `RhizCanvas` (the site builder) to have a `readOnly` mode for Free users.
+  - Allow them to _see_ the complexity they are missing.
 
-- [x] **Interactive Nodes**: Click avatar to see bio/details (Modal or Popover).
-- [x] **Mobile Responsiveness**: Tune orbit radii for mobile screens.
-- [x] **Accessibility**: Keyboard navigation for graph nodes.
-- [x] **Session Intelligence**: Map schedule to Protocol "Context Tags" to recommend sessions.
-- [ ] **Stress Testing**: Add a debug toggle to flood the graph with 50+ mock attendees.
+## 3. THE MOAT: Rhiz Protocol Wiring
 
-## 3. Production Polish
+_Target: Sticky Value_
 
-- [x] **Error Handling**: Graceful fallbacks if Protocol API is down.
-- [x] **Loading States**: Skeletons while fetching relationships.
-- [x] **Performance**: Verify rendering with 50+ nodes.
+- [ ] **Invisible Wallet (Account Abstraction)**
+  - Ensure Clerk Auth maps to a backend **Rhiz Identity** (DID) without prompting for MetaMask/WalletConnect.
+  - _Constraint:_ "Crypto" must be invisible to the user.
+- [ ] **"Warm Start" Data Injection**
+  - Build a job to query public social graphs (Farcaster/Lens) based on email/handle.
+  - Goal: Ensure `getSuggestedConnections` returns >0 results for new users.
+- [ ] **The "Graph" Component Polish**
+  - Finalize `NetworkingGraph` visualization.
+  - Must feel "alive" (physics-based, breathing animations).
 
-## 4. Measurement & ROI (The "Event Intelligence" Dashboard)
+## 4. ANALYTICS: From "Data" to "Insights"
 
-Transform the app from an "Event Generator" to an "Event Intelligence Platform" by measuring success against the user's initial goals.
+_Target: Retention_
 
-- [ ] **Analytics Dashboard (/dashboard)**
+- [ ] **Dashboard Upgrade**
+  - Replace generic stats with "Relationship Metrics."
+  - _Metric:_ "Total New Connections Made."
+  - _Metric:_ "Highest Value Intro."
+- [ ] **Sponsor ROI View**
+  - Track "Logo Impressions" and "Profile Clicks" for flagged Sponsor profiles.
 
-  - **Tech**: Integrated `recharts` for composable, responsive data visualization.
-  - **Visuals**: Dark-mode optimized charts with gradient fills and interactive tooltips.
-  - **Key Metrics**:
-    - **Pipeline Generation**: Estimated deal value created (Simulated based on attendee seniority/role).
-    - **Meeting Matrix**: Chord diagram or Matrix heatmap showing cross-pollination (e.g., % of Investors meeting Founders).
-    - **Content Resonance**: Bar chart ranking sessions by attendance and "heat" (interactions).
+## 5. INFRASTRUCTURE & COMPLIANCE
 
-- [ ] **Automated Insights**
+- [ ] **"Kill Switch" (GDPR)**
+  - Implement a "Delete My Graph Data" button in User Settings.
+  - Ensure it wipes the Protocol mapping (or delinks the DID).
 
-  - [ ] **Goal vs. Actuals**: Direct comparison of "Intended Goals" (from config) vs. simulated outcomes.
-  - [ ] **Sentiment Stream**: "Vibe Check" gauge based on simulated post-event survey data (NPS).
+---
 
-- [ ] **Executive Reporting**
-  - [ ] **"One-Click Recap"**: A specialized view meant to be printed/PDF'd as a summary deck for stakeholders.
+## EXECUTION ORDER
 
-## 5. Future / Exploratory
-
-- [ ] **Live "Helper"**: Real-time suggestions based on current user behavior.
-- [ ] **3D Visualization**: WebGL or Z-axis depth for larger graphs.
+1.  **Phase 1 (Week 1):** Build the "3-Field Creator" & Luma Import for GatherX. (Growth)
+2.  **Phase 2 (Week 2):** Implement the "Invisible Wallet" & Graph Polish for Rhiz Protocol. (Retention)
+3.  **Phase 3 (Week 3):** Erect the "Studio Mode" Paywalls. (Revenue)
