@@ -1,4 +1,4 @@
-import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient, ContextTagsClient, ContextTagCreate } from "./protocol-sdk";
+import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient, ContextTagsClient, ContextTagCreate, ZkClient } from "./protocol-sdk";
 import { RelationshipDetail, OpportunityMatch } from "./protocol-sdk/types";
 import { Session } from "./types";
 import { withTimeout } from "./errorHandling";
@@ -31,6 +31,12 @@ export const contextTagsClient = new ContextTagsClient({
   getAccessToken,
 });
 
+// Initialize ZK Client for zero-knowledge proofs
+export const zkClient = new ZkClient({
+  baseUrl,
+  getAccessToken,
+});
+
 export const rhizClient = {
   /**
    * Ensure a person exists in Rhiz Protocol
@@ -41,6 +47,7 @@ export const rhizClient = {
     email?: string;
     name?: string;
     tags?: string[];
+    avatarUrl?: string;
   }): Promise<{ id: string; externalUserId?: string; did?: string; handle?: string }> => {
     try {
       // Try to find existing person by email if provided
@@ -79,6 +86,7 @@ export const rhizClient = {
         preferred_name: args.name,
         emails: args.email ? [args.email] : [],
         tags: args.tags || [],
+        social_handles: args.avatarUrl ? { avatar: args.avatarUrl } : undefined,
       };
 
       const person = await withTimeout(
@@ -89,6 +97,13 @@ export const rhizClient = {
       
       console.log("Rhiz: Created new person", person.person_id);
       
+      // FIRE AND FORGET: "Warm Start" Strategy (Seed Data)
+      // We proactively enrich the profile to avoid the "Empty Room" problem.
+      rhizClient.enrichIdentity({ 
+          personId: person.person_id, 
+          email: args.email 
+      }).catch(e => console.warn("Rhiz: Background enrichment failed", e));
+
       return {
         id: person.person_id,
         externalUserId: args.externalUserId,
@@ -103,6 +118,36 @@ export const rhizClient = {
         externalUserId: args.externalUserId,
       };
     }
+  },
+
+  /**
+   * "Warm Start" Logic: Ingest public data (simulated)
+   * Scrapes public profiles to populate interests and seed initial connections.
+   */
+  enrichIdentity: async (args: { personId: string; email?: string }): Promise<void> => {
+     // SIMULATED: In a real app, this would call Clearbit/Twitter API
+     console.log("Rhiz: Warming up identity for", args.personId);
+     
+     // 1. Assign "Interest Tags" based on heuristics (or random for demo)
+     const interests = ["Technology", "AI", "Startup", "Music", "Design"];
+     const picked = interests.sort(() => 0.5 - Math.random()).slice(0, 2);
+     
+     // We would use peopleClient.updatePerson() here if available, 
+     // or just log an interaction that implies these interests.
+     
+     // 2. Seed a "Welcome" Connection (The "Tom from Myspace" move)
+     // Connect them to the "Rhiz Community Manager" so the graph isn't empty.
+     const communityManagerId = "rhiz_community_manager"; 
+     
+     await rhizClient.recordInteraction({
+         eventId: ownerId,
+         fromIdentityId: communityManagerId,
+         toIdentityId: args.personId,
+         type: "welcome_handshake",
+         metadata: { note: "Welcome to the Rhiz Network" }
+     });
+     
+     console.log(`Rhiz: Enriched ${args.personId} with interests: ${picked.join(", ")}`);
   },
 
   recordInteraction: async (args: {
@@ -145,7 +190,7 @@ export const rhizClient = {
     eventId: string;
     identityId: string;
     limit?: number;
-  }): Promise<RelationshipDetail[]> => {
+  }): Promise<(RelationshipDetail & { person?: unknown })[]> => {
     try {
       // Get relationships sorted by strength
       const response = await withTimeout(
@@ -161,16 +206,29 @@ export const rhizClient = {
         "Relationship fetch timed out"
       );
       
-      // Return the relationships directly as Protocol Types
-      // We perform a cast here because the SDK currently returns RelationshipRead[] 
-      // but in a real scenario we'd query the detail endpoint or enrich it.
-      // For now, we'll map what we have to RelationshipDetail structure
-      
-      return response.relationships.map(rel => ({
-        ...rel,
-        interaction_count: rel.frequency_score * 10, // Mock derivation
-        latest_interaction_at: rel.last_interaction_at
-      } as RelationshipDetail));
+      const relationships = response.relationships || [];
+
+      // ENRICHMENT: Fetch the actual person details for each relationship
+      const enriched = await Promise.all(relationships.map(async (rel) => {
+          try {
+              const personData = await peopleClient.getPerson(rel.target_person_id);
+              return {
+                  ...rel,
+                  interaction_count: rel.frequency_score * 10,
+                  latest_interaction_at: rel.last_interaction_at,
+                  person: personData
+              };
+          } catch (e) {
+              // If person lookup fails, return relationship without person data
+              return {
+                  ...rel,
+                  interaction_count: rel.frequency_score * 10,
+                  latest_interaction_at: rel.last_interaction_at
+              };
+          }
+      }));
+
+      return enriched as (RelationshipDetail & { person?: unknown })[];
     } catch (error) {
       console.warn("Rhiz: Failed to get connection suggestions", error);
       return []; // Graceful degradation
@@ -208,7 +266,7 @@ export const rhizClient = {
    */
   ingestAttendees: async (args: {
     eventId: string;
-    attendees: { id?: string; name: string; email?: string; tags?: string[] }[];
+    attendees: { id?: string; name: string; email?: string; tags?: string[]; avatarUrl?: string }[];
   }): Promise<{ created: number; failed: number; attendees: { id: string; externalUserId?: string; did?: string; handle?: string }[] }> => {
     try {
       console.log(`Rhiz: Ingesting ${args.attendees.length} attendees`);
@@ -222,7 +280,8 @@ export const rhizClient = {
           name: attendee.name,
           email: attendee.email,
           tags: attendee.tags,
-          externalUserId: attendee.id 
+          externalUserId: attendee.id,
+          avatarUrl: attendee.avatarUrl
         })
       );
 

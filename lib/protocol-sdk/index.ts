@@ -37,6 +37,9 @@ export type { ContextTagsClientOptions } from './contextTags';
 export { CustomAttributesClient } from './customAttributes';
 export type { CustomAttributesClientOptions } from './customAttributes';
 
+export { ZkClient } from './zk';
+export type { ZkClientOptions } from './zk';
+
 // All types
 export * from './types';
 

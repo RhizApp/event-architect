@@ -278,7 +278,8 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
     };
   });
 
-  const attendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => {
+  // 1. Base Attendees (from Config/Mock)
+  const sampleAttendees: NetworkingAttendee[] = config.content.sampleAttendees.map((attendee, i) => {
     const a = attendee as unknown as ContentAttendee;
     const fallbackId = `person-${i}`;
     return {
@@ -296,6 +297,37 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
       did: a.did,
     };
   });
+
+  // 2. Real Network Attendees (from Protocol Relationships)
+  // We cast 'relationships' because we enriched it in rhizClient, but Typescript might only see RelationshipDetail
+  const networkAttendees: NetworkingAttendee[] = (relationships as any[]).map((rel) => {
+     if (!rel.person) return null;
+     const p = rel.person; // The PersonRead object
+     
+     // Extract image from social handles or custom attributes if available
+     // Ideally Protocol would have a standard avatar field. For now checking common places.
+     const avatarUrl = p.social_handles?.avatar || p.social_handles?.image_url;
+
+     return {
+         person_id: p.person_id,
+         owner_id: p.owner_id,
+         created_at: p.created_at,
+         updated_at: p.updated_at,
+         legal_name: p.legal_name,
+         preferred_name: p.preferred_name || p.legal_name,
+         imageFromUrl: avatarUrl, // Use what we found
+         tags: p.tags || [],
+         phones: p.phones || [],
+         social_handles: p.social_handles || {},
+         handle: p.handle,
+         did: p.did
+     } as NetworkingAttendee;
+  }).filter((a): a is NetworkingAttendee => a !== null);
+
+  // 3. Merge: Real connections come first!
+  // Filter out duplicates (if a real connection is also a sample attendee)
+  const uniqueSamples = sampleAttendees.filter(s => !networkAttendees.some(n => n.person_id === s.person_id));
+  const attendees = [...networkAttendees, ...uniqueSamples];
 
   const handleNodeClick = async (attendee: NetworkingAttendee) => {
     setSelectedAttendee(attendee);

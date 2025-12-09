@@ -23,10 +23,18 @@ export interface NetworkingGraphProps {
 
 const GradientField = () => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-blue-500/5 to-transparent blur-3xl opacity-40 animate-pulse-slow" />
-    <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+    {/* Deep Atmospheric Base */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-radial-gradient from-indigo-900/20 via-zinc-950/80 to-zinc-950" />
+    
+    {/* Moving Orbs */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/10 blur-[120px] rounded-full animate-pulse-slow mix-blend-screen" />
+    <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-purple-600/5 blur-[100px] rounded-full animate-blob mix-blend-screen" />
+    <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-teal-500/5 blur-[100px] rounded-full animate-blob animation-delay-2000 mix-blend-screen" />
+    
+    {/* Grain Filter for Texture */}
+    <svg className="absolute inset-0 w-full h-full opacity-[0.05]" xmlns="http://www.w3.org/2000/svg">
       <filter id="noiseFilter">
-        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" />
       </filter>
       <rect width="100%" height="100%" filter="url(#noiseFilter)" />
     </svg>
@@ -80,26 +88,37 @@ const EdgeLine = ({
   return (
     <motion.svg
       className="absolute top-1/2 left-1/2 overflow-visible pointer-events-none"
-      style={{ x: 0, y: 0 }} // Center anchor
+      style={{ x: 0, y: 0 }}
       initial={{ opacity: 0 }}
-      animate={{ opacity: strength * 0.8 }} // Max opacity 0.8 based on strength
+      animate={{ opacity: strength * 0.6 }}
       transition={{ duration: 1.5, delay: 0.5 }}
     >
-      <line
+      <motion.line
         x1={0}
         y1={0}
         x2={x}
         y2={y}
         stroke="url(#edge-gradient)"
-        strokeWidth={1 + strength * 2} // Thicker for stronger ties
-        strokeDasharray="4 4"
-        className="opacity-60"
+        strokeWidth={1}
+        className="opacity-40"
       />
+      
+      {/* Active Pulse Packet */}
+      {strength > 0.5 && (
+        <motion.circle r="2" fill="#60A5FA">
+            <motion.animateMotion 
+               path={`M0,0 L${x},${y}`}
+               dur={`${4 - strength * 2}s`} 
+               repeatCount="indefinite"
+            />
+        </motion.circle>
+      )}
+
       <defs>
-        <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-          <stop offset="50%" stopColor="rgba(59, 130, 246, 0.5)" /> {/* Blue tint */}
-          <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+        <linearGradient id="edge-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2={x} y2={y}>
+          <stop offset="0%" stopColor="rgba(96, 165, 250, 0)" />
+          <stop offset="50%" stopColor="rgba(96, 165, 250, 0.4)" />
+          <stop offset="100%" stopColor="rgba(96, 165, 250, 0.1)" />
         </linearGradient>
       </defs>
     </motion.svg>
@@ -139,7 +158,7 @@ const AvatarNode = ({
       }}
       transition={{
         duration: 1.2,
-        delay: delayOffset * 0.1,
+        delay: delayOffset * 0.05, // Faster stagger
         ease: EASING.living,
         y: {
            duration: randomValues.floatDuration,
@@ -151,53 +170,62 @@ const AvatarNode = ({
     >
       <button 
         onClick={onClick}
-        tabIndex={0}
-        aria-label={attendee ? `View profile of ${attendee.preferred_name}` : "Empty slot"}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            onClick?.();
-          }
-        }}
         className={clsx(
-          "relative w-10 h-10 md:w-14 md:h-14 rounded-full p-[1px] transition-transform duration-300 hover:scale-110 focus:outline-hidden focus:ring-2 focus:ring-blue-500/50",
-          isMatch ? "bg-gradient-to-b from-amber-400 to-amber-600 shadow-amber-500/50" : "bg-gradient-to-b from-white/20 to-white/5",
-          "shadow-lg shadow-black/10 group"
+          "relative group transition-all duration-300",
+          isMobile ? "w-8 h-8" : "w-12 h-12"
       )}>
+        {/* Ring Glow */}
+        <div className={clsx(
+            "absolute -inset-2 rounded-full blur-md transition-opacity duration-300 opacity-0 group-hover:opacity-100",
+            isMatch ? "bg-amber-500/40" : "bg-blue-500/40"
+        )} />
+        
+        {/* Match Ring Animation */}
         {isMatch && (
            <motion.div 
-             className="absolute -inset-1 rounded-full border border-amber-500/50 opacity-70"
-             animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0, 0.7] }}
-             transition={{ duration: 2, repeat: Infinity }}
+             className="absolute -inset-0.5 rounded-full border border-amber-500/60"
+             animate={{ scale: [1, 1.15, 1], opacity: [0.8, 0.4, 0.8] }}
+             transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
            />
         )}
-        <div className="w-full h-full rounded-full overflow-hidden bg-zinc-900 border border-white/5 relative z-10">
+
+        {/* Avatar Container: Glass + Border */}
+        <div className={clsx(
+            "w-full h-full rounded-full overflow-hidden relative z-10 box-border",
+            "border border-white/10 backdrop-blur-md shadow-2xl transition-transform duration-300 group-hover:scale-105",
+            isMatch ? "ring-1 ring-amber-500/50" : "group-hover:ring-1 group-hover:ring-white/30"
+        )}>
+            {/* Background for transparency */}
+            <div className="absolute inset-0 bg-zinc-900/80" />
+
             {attendee?.imageFromUrl ? (
                  <Image
                  src={attendee.imageFromUrl}
                  alt={attendee.preferred_name || "Attendee"}
-                 width={56}
-                 height={56}
-                 className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"
+                 fill
+                 sizes="(max-width: 768px) 32px, 48px"
+                 className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                />
             ) : null}
             
             <div className={clsx(
-                "w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500 text-xs font-medium absolute inset-0",
-                attendee?.imageFromUrl ? "-z-10" : "" 
+                "w-full h-full flex items-center justify-center relative z-20",
+                attendee?.imageFromUrl ? "opacity-0" : "text-white/60 text-[10px]" 
             )}>
-              {attendee ? (
-                <span className="text-white/80">
-                  {attendee.handle ? `@${attendee.handle[0]}` : (attendee.preferred_name?.[0] || "U")}
-                </span>
-              ) : (
-                <User size={14} className="opacity-50" />
+              {!attendee?.imageFromUrl && (
+                  attendee ? (
+                    <span className="font-mono">{attendee.preferred_name?.[0] || "?"}</span>
+                  ) : <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
               )}
             </div>
         </div>
         
-        {/* Glow effect on hover */}
-        <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
+        {/* Label on Hover */}
+        {attendee && (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-black/80 backdrop-blur-md rounded text-[10px] text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-white/10 z-30">
+                {attendee.preferred_name}
+            </div>
+        )}
       </button>
     </motion.div>
   );

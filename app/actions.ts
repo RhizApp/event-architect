@@ -1,17 +1,17 @@
 "use server";
 
 import crypto from "node:crypto";
-import { b as baml } from "@/lib/baml_client/baml_client";
-import { EventAppConfig } from "@/lib/types";
-import { rhizClient } from "@/lib/rhizClient";
+// import { b as baml } from "@/lib/baml_client/baml_client";
+import { EventAppConfig, GraphAttendee, EventGoal } from "@/lib/types";
+import { rhizClient, zkClient } from "@/lib/rhizClient";
 import { 
   BAMLGenerationError, 
   ValidationError,
   TimeoutError 
 } from "@/lib/errors";
 import { 
-  retryWithBackoff, 
-  withTimeout,
+  // retryWithBackoff, 
+  // withTimeout,
   logError
 } from "@/lib/errorHandling";
 import { db } from "@/lib/db";
@@ -34,9 +34,9 @@ export async function generateEventConfig(formData: FormData) {
   const goals = goalsStr.split(",").map(s => s.trim()).filter(Boolean);
   const audience = (formData.get("audience") as string) || "General Audience";
   const relationshipIntent = (formData.get("relationshipIntent") as string) || "medium";
-  const sessionShape = (formData.get("sessionShape") as string) || "standard";
-  const matchmakingAppetite = (formData.get("matchmakingAppetite") as string) || "high";
-  const tools = (formData.get("tools") as string) || "standard";
+  // const sessionShape = (formData.get("sessionShape") as string) || "standard";
+  // const matchmakingAppetite = (formData.get("matchmakingAppetite") as string) || "high";
+  // const tools = (formData.get("tools") as string) || "standard";
   const tone = (formData.get("tone") as string) || "professional";
 
   // Validate required fields
@@ -219,7 +219,8 @@ export async function generateEventConfig(formData: FormData) {
             emails: ["elena@example.com"], 
             tags: ["Builder"], 
             interests: ["Civic Tech", "Governance"], 
-            intents: ["Funding"] 
+            intents: ["Funding"],
+            imageFromUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=128&h=128&fit=crop&crop=faces"
           },
           { 
             person_id: "a2", 
@@ -228,7 +229,8 @@ export async function generateEventConfig(formData: FormData) {
             emails: ["marcus@example.com"], 
             tags: ["Investor"], 
             interests: ["Venture Capital", "Network Effects"], 
-            intents: ["Dealflow"] 
+            intents: ["Dealflow"],
+            imageFromUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=128&h=128&fit=crop&crop=faces"
           },
           { 
             person_id: "a3", 
@@ -237,7 +239,8 @@ export async function generateEventConfig(formData: FormData) {
             emails: ["sarah@example.com"], 
             tags: ["Policy"], 
             interests: ["AI Policy", "Ethics"], 
-            intents: ["Learning"] 
+            intents: ["Learning"],
+            imageFromUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=128&h=128&fit=crop&crop=faces"
           },
           { 
             person_id: "a4", 
@@ -246,7 +249,8 @@ export async function generateEventConfig(formData: FormData) {
             emails: ["david@example.com"], 
             tags: ["Urbanist"], 
             interests: ["Urban Planning", "Systems"], 
-            intents: ["Networking"] 
+            intents: ["Networking"],
+            imageFromUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=128&h=128&fit=crop&crop=faces"
           },
           { 
             person_id: "a5", 
@@ -255,11 +259,28 @@ export async function generateEventConfig(formData: FormData) {
             emails: ["priya@example.com"], 
             tags: ["Privacy"], 
             interests: ["Digital Identity", "Privacy"], 
-            intents: ["Hiring"] 
+            intents: ["Hiring"],
+            imageFromUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=128&h=128&fit=crop&crop=faces"
           }
-        ] as any
+        ] as unknown as GraphAttendee[]
       }
     };
+
+    // MERGE USER INPUTS: Override mock data with real form values
+    // This ensures the "Quick Launch" feels real even with mocked AI generation.
+    if (config.content) {
+        config.content.eventName = (eventBasics.split('.')[0] || "New Event").substring(0, 50); // Use first sentence as title
+        config.content.tagline = eventBasics.substring(0, 150); // Use full text as tagline
+        config.content.date = eventDate;
+        config.content.location = eventLocation;
+    }
+    if (goals.length > 0) {
+        config.primaryGoals = goals as EventGoal[]; // Cast to proper type
+    }
+    // Adjust branding tone based on user selection
+    if (config.branding && tone) {
+        config.branding.toneKeywords = [tone, ...config.branding.toneKeywords.slice(1)];
+    }
     
     // Simulate processing time
     await new Promise(r => setTimeout(r, 1000));
@@ -277,7 +298,7 @@ export async function generateEventConfig(formData: FormData) {
         await db.insert(events).values({
            slug: eventId,
            name: config.content?.eventName || "Untitled Event",
-           config: config as any, // Cast to avoid strict jsonb type issues
+           config: config as unknown, // Cast to avoid strict jsonb type issues
            ownerId: "demo-user", // TODO: Replace with real auth
            status: "draft",
            updatedAt: new Date(),
@@ -303,7 +324,8 @@ export async function generateEventConfig(formData: FormData) {
             id: a.person_id, 
             name: a.legal_name || a.preferred_name || "Unknown",
             email: a.emails?.[0], 
-            tags: a.tags 
+            tags: a.tags,
+            avatarUrl: a.imageFromUrl // No cast needed
           }))
         });
         
@@ -333,17 +355,6 @@ export async function generateEventConfig(formData: FormData) {
          
          const result = await rhizClient.ingestAttendees({ eventId, attendees: speakerAttendees });
          console.log("Rhiz: Speakers synced");
-         
-         // Update speakers with new DIDs/Handles
-         config.content.speakers = config.content.speakers.map(s => {
-             // Find by name if ID match isn't perfect
-             const synced = result.attendees.find(r => r.id === s.handle || r.externalUserId === s.handle); 
-             // Note: ingestAttendees mapping is complex, simplify:
-             // If we didn't pass IDs, we can't easily map back 1:1 without name matching.
-             // But existing implementation of ingestAttendees returns array of results in same order?
-             // rhizClient.ingestAttendees uses Promise.all, so order is preserved.
-             return s; 
-         });
          
          // Direct mapping by index since Promise.all preserves order
          result.attendees.forEach((r, i) => {
@@ -403,4 +414,38 @@ export async function updateEventConfig(
   // TODO: Implement when adding data persistence
   console.log("Update event config:", eventId, updates);
   throw new Error("Not yet implemented");
+}
+
+/**
+ * Verify a ZK proof for attendee verification
+ */
+export async function verifyAttendeeProof(
+  proof: Record<string, unknown>, // Changed from any to unknown for safety
+  publicSignals: string[],
+  vkId: string,
+  verifierPersonId?: string
+) {
+  console.log("Verifying ZK Proof for:", verifierPersonId);
+  
+  try {
+    const result = await zkClient.verifyProof({
+      proof,
+      public_signals: publicSignals,
+      vk_id: vkId,
+      verifier_person_id: verifierPersonId
+    });
+
+    console.log("ZK Verification Result:", result);
+
+    if (result.verified) {
+      // If verified, we could optionally update the person's status or log a trust event here
+      // e.g., await rhizClient.recordInteraction({ ... type: 'zk_verified' ... })
+      return { success: true, message: result.message, log: result.proof_log };
+    } else {
+      return { success: false, message: result.message };
+    }
+  } catch (error) {
+    console.error("ZK Verification Error:", error);
+    return { success: false, message: "Verification process failed due to server error" };
+  }
 }
