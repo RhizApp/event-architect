@@ -210,18 +210,59 @@ export async function generateEventConfig(formData: FormData) {
           // Pillar 4
           { id: "p4_circle", eventId: "evt1", startTime: new Date("2025-10-12T16:00:00"), endTime: new Date("2025-10-12T17:30:00"), format: "convergence_circle", speakers: ["Vitalik Buterin"], title: "Convergence Circles: Civic & Creative Ecosystems", track: "Circles" }
         ],
+        // 4. Sample Attendees (GraphAttendee[])
         sampleAttendees: [
-          { id: "a1", eventId: "evt1", userId: "u_a1", rhizIdentityId: "id_a1", email: "elena@example.com", name: "Elena R.", imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=faces", interests: ["Civic Tech", "Governance"], tags: ["Builder"], intents: ["Funding"] },
-          { id: "a2", eventId: "evt1", userId: "u_a2", rhizIdentityId: "id_a2", email: "marcus@example.com", name: "Marcus J.", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=faces", interests: ["Venture Capital", "Network Effects"], tags: ["Investor"], intents: ["Dealflow"] },
-          { id: "a3", eventId: "evt1", userId: "u_a3", rhizIdentityId: "id_a3", email: "sarah@example.com", name: "Sarah L.", imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=faces", interests: ["AI Policy", "Ethics"], tags: ["Policy"], intents: ["Learning"] },
-          { id: "a4", eventId: "evt1", userId: "u_a4", rhizIdentityId: "id_a4", email: "david@example.com", name: "David K.", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=faces", interests: ["Urban Planning", "Systems"], tags: ["Urbanist"], intents: ["Networking"] },
-          { id: "a5", eventId: "evt1", userId: "u_a5", rhizIdentityId: "id_a5", email: "priya@example.com", name: "Priya M.", imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=faces", interests: ["Digital Identity", "Privacy"], tags: ["Privacy"], intents: ["Hiring"] }
+          { 
+            person_id: "a1", 
+            owner_id: "demo", 
+            legal_name: "Elena R.", 
+            emails: ["elena@example.com"], 
+            tags: ["Builder"], 
+            interests: ["Civic Tech", "Governance"], 
+            intents: ["Funding"] 
+          },
+          { 
+            person_id: "a2", 
+            owner_id: "demo", 
+            legal_name: "Marcus J.", 
+            emails: ["marcus@example.com"], 
+            tags: ["Investor"], 
+            interests: ["Venture Capital", "Network Effects"], 
+            intents: ["Dealflow"] 
+          },
+          { 
+            person_id: "a3", 
+            owner_id: "demo", 
+            legal_name: "Sarah L.", 
+            emails: ["sarah@example.com"], 
+            tags: ["Policy"], 
+            interests: ["AI Policy", "Ethics"], 
+            intents: ["Learning"] 
+          },
+          { 
+            person_id: "a4", 
+            owner_id: "demo", 
+            legal_name: "David K.", 
+            emails: ["david@example.com"], 
+            tags: ["Urbanist"], 
+            interests: ["Urban Planning", "Systems"], 
+            intents: ["Networking"] 
+          },
+          { 
+            person_id: "a5", 
+            owner_id: "demo", 
+            legal_name: "Priya M.", 
+            emails: ["priya@example.com"], 
+            tags: ["Privacy"], 
+            interests: ["Digital Identity", "Privacy"], 
+            intents: ["Hiring"] 
+          }
         ] as any
       }
     };
     
     // Simulate processing time
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 1000));
 
 
     // Generate a stable event ID based on the core inputs so Rhiz relationships are repeatable
@@ -251,54 +292,79 @@ export async function generateEventConfig(formData: FormData) {
     }
 
     // Sync with Rhiz Protocol
-    // Sync with Rhiz Protocol
-    // Sync with Rhiz Protocol
-    const syncPromises: Promise<void>[] = [];
+    // We await these to return the enriched data (handles/DIDs) to the frontend immediately
     
     // 1. Sync Sample Attendees (Bulk)
     if (config.content?.sampleAttendees && config.content.sampleAttendees.length > 0) {
-      syncPromises.push(
-        rhizClient.ingestAttendees({
+      try {
+        const result = await rhizClient.ingestAttendees({
           eventId,
           attendees: config.content.sampleAttendees.map(a => ({
-            id: a.person_id, // Ensure mapping matches GraphAttendee/PersonRead structure or generic object
+            id: a.person_id, 
             name: a.legal_name || a.preferred_name || "Unknown",
             email: a.emails?.[0], 
             tags: a.tags 
           }))
-        }).then(result => {
-           console.log(`Rhiz: Synced ${result.created} attendees`);
-           // Merge back handles/dids to config if possible, but this is async.
-           // For now, we just rely on them being in the protocol for the graph to work later.
-        })
-      );
+        });
+        
+        console.log(`Rhiz: Synced ${result.created} attendees`);
+        
+        // Merge back handles/dids to config
+        config.content.sampleAttendees = config.content.sampleAttendees.map(a => {
+            const synced = result.attendees.find(r => r.id === a.person_id);
+            if (synced) {
+                return { ...a, handle: synced.handle, did: synced.did };
+            }
+            return a;
+        });
+      } catch (err) {
+        console.error("Rhiz: Failed to sync attendees", err);
+      }
     }
 
-    // 2. Sync Speakers (so they have identities in the graph)
+    // 2. Sync Speakers
     if (config.content?.speakers) {
-       const speakerAttendees = config.content.speakers.map(s => ({
-          name: s.name,
-          tags: ["Speaker", s.role]
-       }));
-       syncPromises.push(
-         rhizClient.ingestAttendees({ eventId, attendees: speakerAttendees })
-           .then(() => console.log("Rhiz: Speakers synced"))
-       );
+       try {
+         const speakerAttendees = config.content.speakers.map(s => ({
+            id: s.handle, // Use handle as ID hint if available, or just match by name
+            name: s.name,
+            tags: ["Speaker", s.role]
+         }));
+         
+         const result = await rhizClient.ingestAttendees({ eventId, attendees: speakerAttendees });
+         console.log("Rhiz: Speakers synced");
+         
+         // Update speakers with new DIDs/Handles
+         config.content.speakers = config.content.speakers.map(s => {
+             // Find by name if ID match isn't perfect
+             const synced = result.attendees.find(r => r.id === s.handle || r.externalUserId === s.handle); 
+             // Note: ingestAttendees mapping is complex, simplify:
+             // If we didn't pass IDs, we can't easily map back 1:1 without name matching.
+             // But existing implementation of ingestAttendees returns array of results in same order?
+             // rhizClient.ingestAttendees uses Promise.all, so order is preserved.
+             return s; 
+         });
+         
+         // Direct mapping by index since Promise.all preserves order
+         result.attendees.forEach((r, i) => {
+             if (config.content && config.content.speakers && config.content.speakers[i]) {
+                 config.content.speakers[i].handle = r.handle || config.content.speakers[i].handle;
+                 config.content.speakers[i].did = r.did || config.content.speakers[i].did;
+             }
+         });
+         
+       } catch (err) {
+         console.error("Rhiz: Failed to sync speakers", err);
+       }
     }
 
     // 3. Sync Sessions (Context Tags)
     if (config.content?.schedule) {
-       syncPromises.push(
-         rhizClient.ingestSessions({ eventId, sessions: config.content.schedule })
-       );
+       // Fire and forget, or await if critical
+       await rhizClient.ingestSessions({ eventId, sessions: config.content.schedule });
     }
-
-    // Wait for all sync operations to complete
-    if (syncPromises.length > 0) {
-      console.log(`Rhiz: Syncing ${syncPromises.length} entities...`);
-      await Promise.all(syncPromises);
-      console.log("Rhiz: Sync complete");
-    }
+    
+    console.log("Rhiz: Sync complete");
     
     // enhance config with metadata
     // We cast to any to avoid strict BAML type checks preventing the extra property
