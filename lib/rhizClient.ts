@@ -211,7 +211,7 @@ export const rhizClient = {
       // ENRICHMENT: Fetch the actual person details for each relationship
       const enriched = await Promise.all(relationships.map(async (rel) => {
           try {
-              const personData = await peopleClient.getPerson(rel.target_person_id);
+              const personData = await peopleClient.getPerson(rel.target_person_id, ownerId);
               return {
                   ...rel,
                   interaction_count: rel.frequency_score * 10,
