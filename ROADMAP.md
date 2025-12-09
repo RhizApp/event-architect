@@ -46,7 +46,24 @@ _Target: Sticky Value_
   - Finalize `NetworkingGraph` visualization.
   - Must feel "alive" (physics-based, breathing animations).
 
-## 4. ANALYTICS: From "Data" to "Insights"
+## 4. GROWTH & VIRAL: Lessons from Luma/Partiful
+
+_Target: Conversion & Network Effects_
+
+- [ ] **"Smart Approval" Gates (The Luma Flex)**
+  - Implement `create-gate` logic in `EventAppConfig`.
+  - Feature: Auto-approve guests based on **Trust Score** (>50) or **Vouching** (Followed by Speaker).
+  - UI: "Request to Join" button (replacing "Register") for gated events.
+- [ ] **"Guest List" Preview (The FOMO Hook)**
+  - Expose a readonly version of the `NetworkingGraph` on the **Registration Page**.
+  - Logic: Show "Join 45 builders including [Avatar]..." _before_ sign-up.
+  - Goal: Use social proof to drive conversion.
+- [ ] **Event Chat (The Partiful Loop)**
+  - Implement a "Lobby" chat using Matrix/XMTP.
+  - Feature: Verified attendees can "Wave" or message the group.
+  - Goal: Move communication from email (slow) to instant (sticky).
+
+## 5. ANALYTICS: From "Data" to "Insights"
 
 _Target: Retention_
 
@@ -57,7 +74,7 @@ _Target: Retention_
 - [ ] **Sponsor ROI View**
   - Track "Logo Impressions" and "Profile Clicks" for flagged Sponsor profiles.
 
-## 5. INFRASTRUCTURE & COMPLIANCE
+## 6. INFRASTRUCTURE & COMPLIANCE
 
 - [ ] **"Kill Switch" (GDPR)**
   - Implement a "Delete My Graph Data" button in User Settings.
