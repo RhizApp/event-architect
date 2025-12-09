@@ -131,6 +131,7 @@ const AvatarNode = ({
   y,
   delayOffset,
   isMatch = false,
+  isMobile = false,
   onClick,
 }: {
   attendee: GraphAttendee | null;
@@ -138,6 +139,7 @@ const AvatarNode = ({
   y: number;
   delayOffset: number;
   isMatch?: boolean;
+  isMobile?: boolean;
   onClick?: () => void;
 }) => {
   // Personalized organic motion parameters using stable state
@@ -373,6 +375,7 @@ export function NetworkingGraph({
                         y={y}
                         delayOffset={i}
                         isMatch={isOpportunity(attendee)}
+                        isMobile={isMobile}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />
                    </div>
@@ -404,6 +407,7 @@ export function NetworkingGraph({
                         y={y}
                         delayOffset={i + orbit1.length}
                         isMatch={isOpportunity(attendee)}
+                        isMobile={isMobile}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />
                    </div>
@@ -435,6 +439,7 @@ export function NetworkingGraph({
                         y={y}
                         delayOffset={i + orbit1.length + orbit2.length}
                         isMatch={isOpportunity(attendee)}
+                        isMobile={isMobile}
                         onClick={() => attendee && onNodeClick?.(attendee)}
                       />
                    </div>
