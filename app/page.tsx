@@ -5,6 +5,7 @@ import { generateEventConfig } from "./actions";
 import { EventAppConfig } from "@/lib/types";
 import { EventLandingPage } from "./components/EventLandingPage";
 import { getUserFriendlyMessage } from "@/lib/errors";
+import { AiCapabilities } from "./components/AiCapabilities";
 
 export default function Home() {
   const [isPending, startTransition] = useTransition();
@@ -78,6 +79,8 @@ export default function Home() {
               System Status: Active
             </div>
           </div>
+          
+          <AiCapabilities />
         </header>
 
         {/* Configuration Cockpit */}
