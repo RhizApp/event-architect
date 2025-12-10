@@ -1,6 +1,6 @@
 
 import { NextResponse } from "next/server";
-import { generateEventConfig } from "../../actions";
+import { generateEventConfig } from "../../actions/events";
 
 export async function GET() {
   const formData = new FormData();
