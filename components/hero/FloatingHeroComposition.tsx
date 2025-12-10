@@ -103,7 +103,7 @@ export function FloatingHeroComposition() {
                <div className="relative w-10 h-10 rounded-full border-2 border-zinc-900 overflow-hidden ring-2 ring-brand-500/50 z-10">
                     <Image 
                         src="/hero-assets/avatar-1.jpg" 
-                        alt="User A"
+                        alt="Olufemi"
                         fill
                         className="object-cover"
                     />
@@ -111,7 +111,7 @@ export function FloatingHeroComposition() {
                <div className="relative w-10 h-10 rounded-full border-2 border-zinc-900 overflow-hidden ring-2 ring-cyan-500/50 z-20">
                     <Image 
                         src="/hero-assets/avatar-2.jpg" 
-                        alt="User B"
+                        alt="Israel"
                         fill
                         className="object-cover"
                     />
@@ -120,7 +120,7 @@ export function FloatingHeroComposition() {
 
            <div>
                <div className="text-xs text-brand-300 font-mono mb-0.5 uppercase tracking-wider">New Match</div>
-               <div className="text-sm font-medium text-white">Sarah x David</div>
+               <div className="text-sm font-medium text-white">Olufemi x Israel</div>
                <div className="text-[10px] text-zinc-400">98% Shared Interests</div>
            </div>
         </motion.div>

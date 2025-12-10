@@ -7,12 +7,18 @@ import clsx from "clsx";
 import Image from "next/image";
 
 const AVATARS = [
-  "/hero-assets/avatar-1.jpg",
-  "/hero-assets/avatar-2.jpg",
+  // Local Uploads
+  "/hero-assets/avatar-1.jpg", 
+  "/hero-assets/avatar-2.jpg", 
   "/hero-assets/avatar-3.jpg",
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces",
-  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=faces",
+  // Unsplash High-Res Portraits
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces", // Woman in hat
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces", // Man portrait
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=faces", // Professional woman
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=faces", // Smiling man
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop&crop=faces", // Woman model
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=faces", // Man chin
+  "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=100&h=100&fit=crop&crop=faces", // Woman glasses
 ];
 
 // Simplified Avatar Node for Hero
