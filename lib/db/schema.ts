@@ -14,6 +14,9 @@ export const events = pgTable("events", {
   // Stores the full AI-generated configuration
   config: jsonb("config").notNull(), 
   
+  // Event Type
+  type: text("type").default("architect").notNull(), // 'lite' | 'architect'
+
   // Access control
   ownerId: text("owner_id").notNull(), // Maps to Rhiz Person ID or Auth User ID
   isPublic: boolean("is_public").default(false),
