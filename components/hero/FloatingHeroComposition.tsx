@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useSpring, useTransform, useMotionValue, Easing, TargetAndTransition } from "framer-motion";
 import { HeroGraph } from "./HeroGraph";
 import { TrendingUp, UserPlus } from "lucide-react";
+import Image from "next/image";
 
 export function FloatingHeroComposition() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -97,11 +98,28 @@ export function FloatingHeroComposition() {
           className="absolute -top-8 -right-[10%] md:-right-16 w-52 md:w-64 z-50 p-4 rounded-xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-2xl flex items-center gap-4"
           style={{ transform: "translateZ(60px)" }}
         >
-           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-500 to-cyan-400 flex items-center justify-center shrink-0">
-               <UserPlus className="text-white w-5 h-5" />
+           {/* Overlapping Avatars */}
+           <div className="flex -space-x-4 shrink-0 px-2">
+               <div className="relative w-10 h-10 rounded-full border-2 border-zinc-900 overflow-hidden ring-2 ring-brand-500/50 z-10">
+                    <Image 
+                        src="/hero-assets/avatar-1.jpg" 
+                        alt="User A"
+                        fill
+                        className="object-cover"
+                    />
+               </div>
+               <div className="relative w-10 h-10 rounded-full border-2 border-zinc-900 overflow-hidden ring-2 ring-cyan-500/50 z-20">
+                    <Image 
+                        src="/hero-assets/avatar-2.jpg" 
+                        alt="User B"
+                        fill
+                        className="object-cover"
+                    />
+               </div>
            </div>
+
            <div>
-               <div className="text-xs text-brand-300 font-mono mb-0.5">MATCH FOUND</div>
+               <div className="text-xs text-brand-300 font-mono mb-0.5 uppercase tracking-wider">New Match</div>
                <div className="text-sm font-medium text-white">Sarah x David</div>
                <div className="text-[10px] text-zinc-400">98% Shared Interests</div>
            </div>

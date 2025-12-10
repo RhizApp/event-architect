@@ -4,8 +4,21 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import clsx from "clsx";
 
+import Image from "next/image";
+
+const AVATARS = [
+  "/hero-assets/avatar-1.jpg",
+  "/hero-assets/avatar-2.jpg",
+  "/hero-assets/avatar-3.jpg",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces",
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces",
+  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=faces",
+];
+
 // Simplified Avatar Node for Hero
-const HeroAvatar = ({ delay, x, y, size = "md" }: { delay: number; x: number; y: number; size?: "sm" | "md" }) => {
+const HeroAvatar = ({ delay, x, y, size = "md", idx = 0 }: { delay: number; x: number; y: number; size?: "sm" | "md", idx?: number }) => {
+  const imgUrl = AVATARS[idx % AVATARS.length];
+  
   return (
     <motion.div
       className="absolute top-1/2 left-1/2"
@@ -21,12 +34,17 @@ const HeroAvatar = ({ delay, x, y, size = "md" }: { delay: number; x: number; y:
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, ease: "easeInOut" }}
           className={clsx(
-              "rounded-full border border-white/20 backdrop-blur-md shadow-xl flex items-center justify-center overflow-hidden bg-black/40",
-              size === "md" ? "w-10 h-10" : "w-6 h-6"
+              "relative rounded-full border border-white/20 backdrop-blur-md shadow-xl flex items-center justify-center overflow-hidden bg-black/40",
+              size === "md" ? "w-10 h-10" : "w-8 h-8"
           )}
         >
-             <div className="w-full h-full bg-gradient-to-tr from-brand-500/20 to-purple-500/20" />
-             <div className="absolute text-[8px] text-white/50 font-mono">{String.fromCharCode(65 + Math.floor(Math.random() * 26))}</div>
+             <Image 
+               src={imgUrl} 
+               alt="User" 
+               fill 
+               className="object-cover opacity-90 hover:opacity-100 transition-opacity"
+               sizes="40px"
+             />
         </motion.div>
     </motion.div>
   );
@@ -36,6 +54,7 @@ export function HeroGraph() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line
     setMounted(true);
   }, []);
 
@@ -63,7 +82,7 @@ export function HeroGraph() {
                  const rad = deg * (Math.PI / 180);
                  const x = Math.cos(rad) * 100;
                  const y = Math.sin(rad) * 100;
-                 return <HeroAvatar key={i} delay={i} x={x} y={y} size="sm" />;
+                 return <HeroAvatar key={i} delay={i} x={x} y={y} size="sm" idx={i} />;
              })}
         </motion.div>
 
@@ -77,7 +96,7 @@ export function HeroGraph() {
                  const rad = deg * (Math.PI / 180);
                  const x = Math.cos(rad) * 175;
                  const y = Math.sin(rad) * 175;
-                 return <HeroAvatar key={i} delay={i+4} x={x} y={y} size="md" />;
+                 return <HeroAvatar key={i} delay={i+4} x={x} y={y} size="md" idx={i + 4} />;
              })}
         </motion.div>
         
