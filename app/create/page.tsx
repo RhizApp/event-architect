@@ -19,8 +19,15 @@ export default function CreateEventPage() {
     
     startTransition(async () => {
       try {
-        const config = await generateEventConfig(formData);
-        setResult(config);
+        const result = await generateEventConfig(formData);
+        
+        if (!result.success || !result.data) {
+           const errMsg = result.error || "Unknown error occurred";
+           setError(new Error(errMsg));
+           return;
+        }
+
+        setResult(result.data);
         setRetryCount(0); // Reset retry count on success
       } catch (e) {
         console.error("Submission error:", e);

@@ -25,8 +25,7 @@ const stableHash = (input: string) =>
  * Generate event configuration with comprehensive error handling
  * Includes: validation, retry logic, timeout protection, and typed errors
  */
-export async function generateEventConfig(formData: FormData) {
-  // Extract and validate form data
+export async function generateEventConfig(formData: FormData): Promise<{ success: boolean; data?: EventAppConfig & { eventId: string }; error?: string }> {
   const eventBasics = (formData.get("eventBasics") as string) || "";
   const eventDate = (formData.get("eventDate") as string) || "";
   const eventLocation = (formData.get("eventLocation") as string) || "";
@@ -34,52 +33,36 @@ export async function generateEventConfig(formData: FormData) {
   const goals = goalsStr.split(",").map(s => s.trim()).filter(Boolean);
   const audience = (formData.get("audience") as string) || "General Audience";
   const relationshipIntent = (formData.get("relationshipIntent") as string) || "medium";
-  // const sessionShape = (formData.get("sessionShape") as string) || "standard";
-  // const matchmakingAppetite = (formData.get("matchmakingAppetite") as string) || "high";
-  // const tools = (formData.get("tools") as string) || "standard";
   const tone = (formData.get("tone") as string) || "professional";
 
-  // Validate required fields
-  if (!eventBasics || eventBasics.length < 10) {
-    throw new ValidationError(
-      "Event description must be at least 10 characters",
-      "eventBasics",
-      eventBasics
-    );
-  }
-
-  if (!eventDate) {
-    throw new ValidationError(
-      "Event date is required",
-      "eventDate"
-    );
-  }
-
-  if (!eventLocation) {
-    throw new ValidationError(
-      "Event location is required",
-      "eventLocation"
-    );
-  }
-
-  if (goals.length === 0) {
-    throw new ValidationError(
-      "At least one goal is required",
-      "goals"
-    );
-  }
-
-  console.log("Generating config with inputs:", { 
-    eventBasics: eventBasics.substring(0, 50) + "...", 
-    eventDate, 
-    eventLocation, 
-    goals, 
-    audience, 
-    relationshipIntent, 
-    tone 
-  });
-
   try {
+    // Validate required fields
+    if (!eventBasics || eventBasics.length < 10) {
+      return { success: false, error: "Event description must be at least 10 characters" };
+    }
+
+    if (!eventDate) {
+      return { success: false, error: "Event date is required" };
+    }
+
+    if (!eventLocation) {
+      return { success: false, error: "Event location is required" };
+    }
+
+    if (goals.length === 0) {
+      return { success: false, error: "At least one goal is required" };
+    }
+
+    console.log("Generating config with inputs:", { 
+      eventBasics: eventBasics.substring(0, 50) + "...", 
+      eventDate, 
+      eventLocation, 
+      goals, 
+      audience, 
+      relationshipIntent, 
+      tone 
+    });
+
     // Mock BAML response for 'Convergence Intelligence Summit' Demo
     const config: EventAppConfig = {
       id: "mock_config_1",
@@ -154,7 +137,7 @@ export async function generateEventConfig(formData: FormData) {
             minContribution: 2500000,
             benefits: ["Booth", "Workshop Host"],
             sponsors: [
-               { id: "org2", name: "Protocol Labs", slug: "protocol-labs", ownerUserId: "u2", createdAt: new Date() }
+              { id: "org2", name: "Protocol Labs", slug: "protocol-labs", ownerUserId: "u2", createdAt: new Date() }
             ]
           }
         ],
@@ -192,7 +175,7 @@ export async function generateEventConfig(formData: FormData) {
           { name: "Vitalik Buterin", role: "Co-founder", company: "Ethereum", bio: "Building network-aware immutable tools.", imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop&crop=faces", handle: "vitalik", did: "did:rhiz:vitalik" },
           { name: "Meredith Whittaker", role: "President", company: "Signal", bio: "Privacy as infrastructure for trust.", imageUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=faces", handle: "meredith", did: "did:rhiz:meredith" },
           { name: "Glen Weyl", role: "Founder", company: "RadicalxChange", bio: "Plurality and democratic mechanisms.", imageUrl: "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&h=400&fit=crop&crop=faces", handle: "glen", did: "did:rhiz:glen" },
-           { name: "Dan Koppelkamm", role: "Investigator", company: "Rhiz", bio: "Network cartography.", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=faces", handle: "dan", did: "did:rhiz:dan" }
+          { name: "Dan Koppelkamm", role: "Investigator", company: "Rhiz", bio: "Network cartography.", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=faces", handle: "dan", did: "did:rhiz:dan" }
         ],
         schedule: [
           // Pre-Event / Opening
@@ -266,18 +249,16 @@ export async function generateEventConfig(formData: FormData) {
       }
     };
 
-    // MERGE USER INPUTS: Override mock data with real form values
-    // This ensures the "Quick Launch" feels real even with mocked AI generation.
+    // MERGE USER INPUTS
     if (config.content) {
-        config.content.eventName = (eventBasics.split('.')[0] || "New Event").substring(0, 50); // Use first sentence as title
-        config.content.tagline = eventBasics.substring(0, 150); // Use full text as tagline
+        config.content.eventName = (eventBasics.split('.')[0] || "New Event").substring(0, 50); 
+        config.content.tagline = eventBasics.substring(0, 150); 
         config.content.date = eventDate;
         config.content.location = eventLocation;
     }
     if (goals.length > 0) {
-        config.primaryGoals = goals as EventGoal[]; // Cast to proper type
+        config.primaryGoals = goals as EventGoal[]; 
     }
-    // Adjust branding tone based on user selection
     if (config.branding && tone) {
         config.branding.toneKeywords = [tone, ...config.branding.toneKeywords.slice(1)];
     }
@@ -285,37 +266,31 @@ export async function generateEventConfig(formData: FormData) {
     // Simulate processing time
     await new Promise(r => setTimeout(r, 1000));
 
-
-    // Generate a stable event ID based on the core inputs so Rhiz relationships are repeatable
+    // Generate stable ID
     const eventFingerprint = `${eventBasics}|${eventDate}|${eventLocation}|${goals.join(",")}|${audience}|${tone}`;
     const eventId = `event_${stableHash(eventFingerprint)}`;
 
     console.log("Successfully generated event config. Event ID:", eventId);
 
-    // PERSISTENCE: Save to Database
+    // Save to Database
     try {
       if (process.env.DATABASE_URL || process.env.POSTGRES_URL) {
         await db.insert(events).values({
-           slug: eventId,
-           name: config.content?.eventName || "Untitled Event",
-           config: config as unknown, // Cast to avoid strict jsonb type issues
-           ownerId: "demo-user", // TODO: Replace with real auth
-           status: "draft",
-           updatedAt: new Date(),
+            slug: eventId,
+            name: config.content?.eventName || "Untitled Event",
+            config: config as unknown,
+            ownerId: "demo-user",
+            status: "draft",
+            updatedAt: new Date(),
         });
         console.log("DB: Saved event", eventId);
-      } else {
-        console.warn("DB: DATABASE_URL not set, skipping persistence");
       }
     } catch (dbError) {
-      console.error("DB: Failed to save event", dbError);
-      // Don't fail the request, just log
+      console.error("DB: Failed to save event (non-fatal)", dbError);
     }
 
     // Sync with Rhiz Protocol
-    // We await these to return the enriched data (handles/DIDs) to the frontend immediately
-    
-    // 1. Sync Sample Attendees (Bulk)
+    // 1. Sync Attendees
     if (config.content?.sampleAttendees && config.content.sampleAttendees.length > 0) {
       try {
         const result = await rhizClient.ingestAttendees({
@@ -325,13 +300,11 @@ export async function generateEventConfig(formData: FormData) {
             name: a.legal_name || a.preferred_name || "Unknown",
             email: a.emails?.[0], 
             tags: a.tags,
-            avatarUrl: a.imageFromUrl // No cast needed
+            avatarUrl: a.imageFromUrl
           }))
         });
         
-        console.log(`Rhiz: Synced ${result.created} attendees`);
-        
-        // Merge back handles/dids to config
+        // Merge back handles
         config.content.sampleAttendees = config.content.sampleAttendees.map(a => {
             const synced = result.attendees.find(r => r.id === a.person_id);
             if (synced) {
@@ -348,15 +321,13 @@ export async function generateEventConfig(formData: FormData) {
     if (config.content?.speakers) {
        try {
          const speakerAttendees = config.content.speakers.map(s => ({
-            id: s.handle, // Use handle as ID hint if available, or just match by name
+            id: s.handle, 
             name: s.name,
             tags: ["Speaker", s.role]
          }));
          
          const result = await rhizClient.ingestAttendees({ eventId, attendees: speakerAttendees });
-         console.log("Rhiz: Speakers synced");
          
-         // Direct mapping by index since Promise.all preserves order
          result.attendees.forEach((r, i) => {
              if (config.content && config.content.speakers && config.content.speakers[i]) {
                  config.content.speakers[i].handle = r.handle || config.content.speakers[i].handle;
@@ -369,38 +340,18 @@ export async function generateEventConfig(formData: FormData) {
        }
     }
 
-    // 3. Sync Sessions (Context Tags)
+    // 3. Sync Sessions
     if (config.content?.schedule) {
-       // Fire and forget, or await if critical
        await rhizClient.ingestSessions({ eventId, sessions: config.content.schedule });
     }
     
-    console.log("Rhiz: Sync complete");
-    
-    // enhance config with metadata
-    // We cast to any to avoid strict BAML type checks preventing the extra property
-    return { ...config, eventId } as EventAppConfig & { eventId: string };
+    return { success: true, data: { ...config, eventId } };
 
   } catch (error: unknown) {
-    // Log detailed error information
-    logError(error instanceof Error ? error : new Error(String(error)), {
-      action: 'generateEventConfig',
-      inputs: { eventBasics: eventBasics.substring(0, 100), eventDate, eventLocation }
-    });
-
-    // Convert to typed error if needed
-    if (error instanceof ValidationError || 
-        error instanceof TimeoutError || 
-        error instanceof BAMLGenerationError) {
-      throw error;
-    }
-
-    // Wrap unknown errors in BAMLGenerationError
-    throw new BAMLGenerationError(
-      "Failed to generate event configuration",
-      error instanceof Error ? error : new Error(String(error)),
-      { eventBasics: eventBasics.substring(0, 100) }
-    );
+    // Catch ALL errors and return them safely to the client
+    console.error("Server Action Error:", error);
+    const message = error instanceof Error ? error.message : "An unexpected error occurred";
+    return { success: false, error: message };
   }
 }
 
