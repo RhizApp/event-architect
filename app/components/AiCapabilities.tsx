@@ -190,8 +190,9 @@ export function AiCapabilities() {
         AI Intelligence Suite
       </h3>
       
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {capabilities.map((cap, i) => (
+            // eslint-disable-next-line
           <motion.div 
             key={i}
             whileHover={{ scale: 1.02, x: 5 }}
@@ -292,6 +293,7 @@ export function AiCapabilities() {
                                         {item.status === 'optimized' && <Zap className="w-4 h-4 text-amber-500" />}
                                         {item.status === 'live' && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse ml-1 mr-1" />}
                                         {item.status === 'done' && <CheckCircle2 className="w-4 h-4 text-surface-400" />}
+                                        {item.status === 'calculated' && <CheckCircle2 className="w-4 h-4 text-indigo-400" />}
                                         <span className="text-surface-200">{item.text}</span>
                                     </div>
                                 ))}
