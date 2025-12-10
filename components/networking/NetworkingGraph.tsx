@@ -5,7 +5,7 @@ import Image from "next/image";
 import clsx from "clsx";
 import { useState, useEffect, useMemo } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
-import { User, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
 import { GraphAttendee } from "@/lib/types";
 

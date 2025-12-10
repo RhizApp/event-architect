@@ -1,5 +1,5 @@
 import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient, ContextTagsClient, ContextTagCreate, ZkClient } from "./protocol-sdk";
-import { RelationshipDetail, OpportunityMatch } from "./protocol-sdk/types";
+import { RelationshipDetail, OpportunityMatch, PersonRead } from "./protocol-sdk/types";
 import { Session } from "./types";
 import { withTimeout } from "./errorHandling";
 
@@ -190,7 +190,7 @@ export const rhizClient = {
     eventId: string;
     identityId: string;
     limit?: number;
-  }): Promise<(RelationshipDetail & { person?: unknown })[]> => {
+  }): Promise<(RelationshipDetail & { person?: PersonRead })[]> => {
     try {
       // Get relationships sorted by strength
       const response = await withTimeout(
@@ -218,7 +218,7 @@ export const rhizClient = {
                   latest_interaction_at: rel.last_interaction_at,
                   person: personData
               };
-          } catch (e) {
+          } catch {
               // If person lookup fails, return relationship without person data
               return {
                   ...rel,
@@ -228,7 +228,7 @@ export const rhizClient = {
           }
       }));
 
-      return enriched as (RelationshipDetail & { person?: unknown })[];
+      return enriched as (RelationshipDetail & { person?: PersonRead })[];
     } catch (error) {
       console.warn("Rhiz: Failed to get connection suggestions", error);
       return []; // Graceful degradation

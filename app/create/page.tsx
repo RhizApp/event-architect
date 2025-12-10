@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useState, useTransition, useCallback } from "react";
 import { generateEventConfig } from "../actions";
 import { EventAppConfig } from "@/lib/types";
@@ -269,9 +271,9 @@ export default function CreateEventPage() {
                     <p className="text-center text-surface-500 text-xs">
                     Powered by Rhiz Intelligence • Generates configuration in ~15s
                     </p>
-                    <a href="/" className="text-xs text-brand-400 hover:text-brand-300">
+                    <Link href="/" className="text-xs text-brand-400 hover:text-brand-300">
                         Back using Home
-                    </a>
+                    </Link>
                 </div>
               </div>
             </form>

@@ -5,14 +5,8 @@ import crypto from "node:crypto";
 import { EventAppConfig, GraphAttendee, EventGoal } from "@/lib/types";
 import { rhizClient, zkClient } from "@/lib/rhizClient";
 import { 
-  BAMLGenerationError, 
-  ValidationError,
-  TimeoutError 
-} from "@/lib/errors";
-import { 
   // retryWithBackoff, 
   // withTimeout,
-  logError
 } from "@/lib/errorHandling";
 import { db } from "@/lib/db";
 import { events } from "@/lib/db/schema";

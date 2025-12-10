@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useSpring, useTransform, useMotionValue, Easing, TargetAndTransition } from "framer-motion";
+import { motion, useSpring, useTransform, useMotionValue, TargetAndTransition } from "framer-motion";
 import { HeroGraph } from "./HeroGraph";
-import { TrendingUp, UserPlus } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import Image from "next/image";
 
 export function FloatingHeroComposition() {

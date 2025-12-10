@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { EventAppConfig } from '@/lib/types';
-import { RelationshipDetail, OpportunityMatch } from '@/lib/protocol-sdk/types';
+import { RelationshipDetail, OpportunityMatch, PersonRead } from '@/lib/protocol-sdk/types';
 import { HeroSection } from '@/components/hero/HeroSection';
 import { SpeakerSpotlight } from './speakers/SpeakerSpotlight';
 import { NetworkingGraph } from '@/components/networking/NetworkingGraph';
@@ -45,7 +45,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
   const theme = determineTheme(config.branding.toneKeywords);
   const { pushToast } = useToast();
 
-  const [relationships, setRelationships] = React.useState<RelationshipDetail[]>([]);
+  const [relationships, setRelationships] = React.useState<(RelationshipDetail & { person?: PersonRead })[]>([]);
   const [opportunities, setOpportunities] = React.useState<OpportunityMatch[]>([]);
   const [currentUserId, setCurrentUserId] = React.useState<string | null>(null);
   const [selectedAttendee, setSelectedAttendee] = React.useState<NetworkingAttendee | null>(null);
@@ -247,31 +247,31 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
   const sessions = config.content.schedule.map((session) => {
     // Cast to any to handle both strict Session type and demo data shape
-    const s = session as any;
+    const s = session as unknown as Record<string, unknown>;
     
-    let timeStr = s.time;
+    let timeStr = s.time as string;
     if (!timeStr && s.startTime) {
        try {
-         timeStr = new Date(s.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-       } catch (e) {
+         timeStr = new Date(s.startTime as string).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+       } catch {
          timeStr = "TBD";
        }
     }
 
-    let speakerName = s.speakerName;
+    let speakerName = s.speakerName as string;
     if (!speakerName && s.speakers && Array.isArray(s.speakers) && s.speakers.length > 0) {
-        speakerName = s.speakers[0];
+        speakerName = (s.speakers as string[])[0];
     }
 
     return {
-      id: s.id,
+      id: s.id as string,
       time: timeStr || "TBD",
-      title: s.title,
-      description: s.description,
+      title: s.title as string,
+      description: s.description as string,
       speaker: {
         name: speakerName || "TBD",
         avatar: speakers.find((sp) => sp.name === speakerName)?.imageUrl || '',
-        role: s.speakerRole || "Speaker",
+        role: s.speakerRole as string || "Speaker",
       },
       track: (s.track as 'Main Stage' | 'Workshop' | 'Networking') || 'Main Stage',
       isWide: !!s.isWide,
@@ -300,7 +300,7 @@ export function EventLandingPage({ config }: EventLandingPageProps) {
 
   // 2. Real Network Attendees (from Protocol Relationships)
   // We cast 'relationships' because we enriched it in rhizClient, but Typescript might only see RelationshipDetail
-  const networkAttendees: NetworkingAttendee[] = (relationships as any[]).map((rel) => {
+  const networkAttendees: NetworkingAttendee[] = relationships.map((rel) => {
      if (!rel.person) return null;
      const p = rel.person; // The PersonRead object
      

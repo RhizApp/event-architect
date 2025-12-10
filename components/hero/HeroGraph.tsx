@@ -38,7 +38,7 @@ const HeroAvatar = ({ delay, x, y, size = "md", idx = 0 }: { delay: number; x: n
     >
         <motion.div
           animate={{ y: [0, -10, 0] }}
-          transition={{ duration: 3 + Math.random() * 2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 3 + (idx % 3) * 0.5, repeat: Infinity, ease: "easeInOut" }}
           className={clsx(
               "relative rounded-full border border-white/20 backdrop-blur-md shadow-xl flex items-center justify-center overflow-hidden bg-black/40",
               size === "md" ? "w-10 h-10" : "w-8 h-8"

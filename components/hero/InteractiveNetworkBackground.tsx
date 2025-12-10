@@ -117,8 +117,9 @@ export const InteractiveNetworkBackground: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    if(containerRef.current) {
-        containerRef.current.addEventListener('mousemove', handleMouseMove);
+    const currentContainer = containerRef.current;
+    if(currentContainer) {
+        currentContainer.addEventListener('mousemove', handleMouseMove);
     }
     
     // Initial setup
@@ -127,8 +128,8 @@ export const InteractiveNetworkBackground: React.FC = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if(containerRef.current) {
-        containerRef.current.removeEventListener('mousemove', handleMouseMove);
+      if(currentContainer) {
+        currentContainer.removeEventListener('mousemove', handleMouseMove);
       }
       cancelAnimationFrame(animationFrameId);
     };
