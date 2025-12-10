@@ -3,10 +3,15 @@
 import Link from "next/link";
 
 import { useState, useTransition, useCallback } from "react";
-import { generateEventConfig } from "../actions";
+import { motion, AnimatePresence } from "framer-motion";
+import { generateEventConfig } from "../actions/events";
 import { EventAppConfig } from "@/lib/types";
 import { EventLandingPage } from "../components/EventLandingPage";
-import { getUserFriendlyMessage } from "@/lib/errors";
+import { ModeSelector } from "@/components/create/ModeSelector";
+import { LiteModeFields } from "@/components/create/LiteModeFields";
+import { ArchitectModeFields } from "@/components/create/ArchitectModeFields";
+import { GenerationError } from "@/components/create/GenerationError";
+import { ImageUploader } from "@/components/create/ImageUploader";
 
 export default function CreateEventPage() {
   const [isPending, startTransition] = useTransition();
@@ -14,6 +19,19 @@ export default function CreateEventPage() {
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [lastFormData, setLastFormData] = useState<FormData | null>(null);
+  const [mode, setMode] = useState<'lite' | 'architect'>('architect');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [scrapedData, setScrapedData] = useState<any | null>(null);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleExtraction = useCallback((data: any) => {
+    console.log("Scraped data:", data);
+    setScrapedData(data);
+    
+    // Auto-switch mode if we detect rich details? 
+    // For now, staying in current mode is safer, or we could hint user.
+    // Ensure we have minimal valid data to show visual feedback
+  }, []);
 
   const handleSubmit = useCallback((formData: FormData) => {
     setError(null);
@@ -64,26 +82,27 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-950 text-foreground font-sans selection:bg-brand-500/30">
-      <main className="max-w-4xl mx-auto px-6 py-24">
+    <div className="min-h-screen bg-surface-950 bg-noise text-foreground font-sans selection:bg-brand-500/30">
+      <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-24">
         {/* Header */}
-        <div className="mb-12 text-center">
-            <h1 className="text-4xl font-heading font-bold tracking-tighter text-white mb-4">
+        <div className="mb-8 md:mb-12 text-center">
+            <h1 className="text-3xl md:text-4xl font-heading font-bold tracking-tighter text-white mb-3 md:mb-4">
               Configure Your Event
             </h1>
-            <p className="text-surface-400 font-light max-w-lg mx-auto leading-relaxed">
+            <p className="text-surface-400 font-light text-sm md:text-base max-w-lg mx-auto leading-relaxed">
               Define the constraints and goals. Our AI engine will generate the entire experience architecture in seconds.
             </p>
         </div>
 
         {/* Configuration Cockpit - Centered */}
         <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
-          <section className="bg-surface-900/50 backdrop-blur-xl border border-surface-800 rounded-3xl p-8 md:p-12 shadow-2xl ring-1 ring-white/5">
-            <div className="mb-10 flex items-center justify-between">
-              <h2 className="text-2xl font-heading font-semibold text-white tracking-tight">
+          <section className="relative bg-surface-900/40 backdrop-blur-2xl border border-white/5 rounded-3xl p-5 md:p-12 shadow-glass ring-1 ring-white/5 overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-brand-500/20 to-transparent" />
+            <div className="mb-8 md:mb-10 flex items-center justify-between">
+              <h2 className="text-xl md:text-2xl font-heading font-semibold text-white tracking-tight">
                 Configuration Parameters
               </h2>
-              <span className="text-xs font-mono text-brand-400 bg-brand-500/10 px-3 py-1 rounded-full border border-brand-500/20">
+              <span className="text-[10px] md:text-xs font-mono text-brand-400 bg-brand-500/10 px-2 md:px-3 py-1 rounded-full border border-brand-500/20">
                 v2.0.0
               </span>
             </div>
@@ -92,197 +111,57 @@ export default function CreateEventPage() {
               e.preventDefault();
               const md = new FormData(e.currentTarget);
               handleSubmit(md);
-            }} className="space-y-10">
+            }} className="space-y-8 md:space-y-10 pb-24 md:pb-0">
               
-              {/* Mode Selection */}
-              <div className="space-y-4 group">
-                <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                  00 // Select Mode
-                </label>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <label className="relative flex cursor-pointer rounded-xl border border-surface-800 bg-surface-900/50 p-4 hover:bg-surface-800 transition-all has-[:checked]:border-brand-500 has-[:checked]:ring-1 has-[:checked]:ring-brand-500/50">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="lite"
-                      className="peer sr-only"
-                    />
-                    <div className="flex flex-col gap-2">
-                       <div className="flex items-center justify-between">
-                         <span className="font-heading font-semibold text-white">Lite Mode</span>
-                         <span className="h-2 w-2 rounded-full bg-surface-600 peer-checked:bg-brand-500 transition-colors" />
-                       </div>
-                       <p className="text-sm text-surface-400 font-light">
-                         Quick, essential event setup. Best for meetups and simple gatherings.
-                       </p>
-                    </div>
-                  </label>
+              <ModeSelector mode={mode} onChange={setMode} />
 
-                  <label className="relative flex cursor-pointer rounded-xl border border-surface-800 bg-surface-900/50 p-4 hover:bg-surface-800 transition-all has-[:checked]:border-brand-500 has-[:checked]:ring-1 has-[:checked]:ring-brand-500/50">
-                    <input
-                      type="radio"
-                      name="type"
-                      value="architect"
-                      defaultChecked
-                      className="peer sr-only"
-                    />
-                    <div className="flex flex-col gap-2">
-                       <div className="flex items-center justify-between">
-                         <span className="font-heading font-semibold text-white">Architect Mode</span>
-                         <span className="h-2 w-2 rounded-full bg-brand-500 peer-checked:bg-brand-500 transition-colors shadow-[0_0_10px_rgba(56,189,248,0.5)]" />
-                       </div>
-                       <p className="text-sm text-surface-400 font-light">
-                         Full AI-powered experience design with deep customization.
-                       </p>
-                    </div>
-                  </label>
-                </div>
-              </div>
+              <ImageUploader onExtractionComplete={handleExtraction} />
 
-              {/* Event Essence */}
-              <div className="space-y-4 group">
-                <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                  01 // Event Essence
-                </label>
-                <textarea
-                  name="eventBasics"
-                  placeholder="Describe your event... e.g. 'A high-energy hackathon in Tokyo for 200 crypto-natives looking to build the future of privacy.'"
-                  className="w-full bg-surface-950 border-0 border-b-2 border-surface-800 focus:border-brand-500 text-2xl md:text-3xl font-light text-white placeholder-surface-700 py-4 px-0 resize-none outline-none transition-all focus:ring-0 min-h-[160px] leading-tight"
-                  required
-                />
-              </div>
+              {/* LITE MODE SPECIFIC FIELDS */}
+              {mode === 'lite' && <LiteModeFields defaultValues={scrapedData} />}
+
+              {/* ARCHITECT MODE SPECIFIC FIELDS */}
+              {mode === 'architect' && <ArchitectModeFields defaultValues={scrapedData} />}
 
               {error && (
-                <div className="p-6 bg-red-900/20 border border-red-500/20 rounded-2xl backdrop-blur-sm">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0 mt-1">
-                      <svg className="w-5 h-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                      </svg>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-red-400 mb-2">
-                        Generation Failed
-                      </h4>
-                      <p className="text-surface-300 text-sm mb-4">
-                        {getUserFriendlyMessage(error)}
-                      </p>
-                      
-                      {retryCount > 0 && (
-                        <p className="text-surface-500 text-xs mb-4">
-                          Retry attempt: {retryCount}
-                        </p>
-                      )}
-                      
-                      <button
-                        onClick={handleRetry}
-                        disabled={isPending}
-                        className="text-sm text-brand-400 hover:text-brand-300 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {isPending ? 'Retrying...' : 'Try Again →'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <GenerationError 
+                    error={error} 
+                    retryCount={retryCount} 
+                    isPending={isPending} 
+                    onRetry={handleRetry} 
+                />
               )}
 
-              {/* Event Details */}
-              <div className="grid md:grid-cols-2 gap-12">
+              {/* SHARED FIELDS (Date & Location) */}
+              <div className="grid md:grid-cols-2 gap-8 md:gap-12">
                 <div className="space-y-4 group">
                   <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                    02 // Event Date
+                    {mode === 'lite' ? 'When' : '02 // Event Date'}
                   </label>
                   <input
+                    key={scrapedData?.eventDate ? 'date-filled' : 'date-empty'}
+                    defaultValue={scrapedData?.eventDate}
                     name="eventDate"
                     type="text"
-                    placeholder="e.g., 'Oct 12-14, 2025' or 'December 15, 2025'"
-                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
+                    placeholder="e.g., 'Oct 12-14, 2025'"
+                    className="w-full bg-transparent border-0 border-b border-surface-700/50 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600/50 py-3 px-0 outline-none transition-all duration-300 focus:scale-[1.01] focus:-translate-y-0.5 focus:shadow-[0_10px_20px_-10px_rgba(6,182,212,0.1)]"
                     required
                   />
                 </div>
 
                 <div className="space-y-4 group">
                   <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                    03 // Location
+                    {mode === 'lite' ? 'Where' : '03 // Location'}
                   </label>
                   <input
+                    key={scrapedData?.eventLocation ? 'loc-filled' : 'loc-empty'}
+                    defaultValue={scrapedData?.eventLocation}
                     name="eventLocation"
                     type="text"
-                    placeholder="e.g., 'Brooklyn, NY' or 'San Francisco, CA'"
-                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
+                    placeholder="e.g., 'Brooklyn, NY'"
+                    className="w-full bg-transparent border-0 border-b border-surface-700/50 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600/50 py-3 px-0 outline-none transition-all duration-300 focus:scale-[1.01] focus:-translate-y-0.5 focus:shadow-[0_10px_20px_-10px_rgba(6,182,212,0.1)]"
                     required
                   />
-                </div>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-12">
-                {/* Strategic Goals */}
-                <div className="space-y-4 group">
-                  <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                    04 // Strategic Goals
-                  </label>
-                  <input
-                    name="goals"
-                    placeholder="Networking, Dealflow..."
-                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
-                    required
-                  />
-                  <p className="text-xs text-surface-500">Comma separated objectives</p>
-                </div>
-
-                {/* Target Audience */}
-                <div className="space-y-4 group">
-                  <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
-                    05 // Audience Profile
-                  </label>
-                  <input
-                    name="audience"
-                    placeholder="Founders, VCs, Builders..."
-                    className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
-                  />
-                </div>
-              </div>
-
-              {/* Vibe & Connection */}
-              <div className="grid md:grid-cols-2 gap-8 pt-4">
-                <div className="space-y-3">
-                  <label className="text-xs font-mono text-surface-500 uppercase tracking-widest">
-                    Atmosphere
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="tone"
-                      className="w-full appearance-none bg-surface-800/50 hover:bg-surface-800 text-white rounded-xl px-6 py-4 outline-none border border-surface-700 focus:border-brand-500 transition-all cursor-pointer text-lg font-medium"
-                    >
-                      <option value="professional">Professional & Crisp</option>
-                      <option value="vibrant">Vibrant & Electric</option>
-                      <option value="casual">Casual & Organic</option>
-                      <option value="luxury">Luxury & Exclusive</option>
-                    </select>
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400">
-                      ↓
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-xs font-mono text-surface-500 uppercase tracking-widest">
-                    Connection Density
-                  </label>
-                  <div className="relative">
-                    <select
-                      name="relationshipIntent"
-                      className="w-full appearance-none bg-surface-800/50 hover:bg-surface-800 text-white rounded-xl px-6 py-4 outline-none border border-surface-700 focus:border-brand-500 transition-all cursor-pointer text-lg font-medium"
-                    >
-                      <option value="high">Active Matchmaking</option>
-                      <option value="medium">Organic Networking</option>
-                      <option value="low">Content Focused</option>
-                    </select>
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-surface-400">
-                      ↓
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -291,39 +170,58 @@ export default function CreateEventPage() {
               <input type="hidden" name="matchmakingAppetite" value="high" />
               <input type="hidden" name="tools" value="standard" />
 
-              <div className="pt-8">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="group relative w-full py-6 bg-white hover:bg-brand-50 rounded-2xl text-black font-heading font-bold text-xl tracking-tight transition-all transform hover:scale-[1.01] hover:shadow-2xl hover:shadow-white/20 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-3">
-                    {isPending ? (
-                      <>
-                        <span className="animate-spin text-2xl">✺</span>
-                        {retryCount > 0 ? (
-                          <>Retrying Generation (Attempt {retryCount + 1})...</>
-                        ) : (
-                          <>Initializing Event Protocol...</>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        Generate Event Experience
-                        <span className="group-hover:translate-x-1 transition-transform">→</span>
-                      </>
-                    )}
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                </button>
-                <div className="flex items-center justify-center mt-4 gap-4">
-                    <p className="text-center text-surface-500 text-xs">
-                    Powered by Rhiz Intelligence • Generates configuration in ~15s
-                    </p>
-                    <Link href="/" className="text-xs text-brand-400 hover:text-brand-300">
-                        Back using Home
-                    </Link>
-                </div>
+              {/* Submit Action - Sticky on Mobile, Static on Desktop */}
+              <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-950/90 backdrop-blur-xl border-t border-white/10 z-40 md:static md:bg-transparent md:border-t-0 md:p-0 md:z-auto md:backdrop-blur-none">
+                 <div className="max-w-4xl mx-auto w-full"> {/* Container to match parent width on mobile optionally, but strictly we just want full width button */}
+                    <button
+                      type="submit"
+                      disabled={isPending}
+                      className="group relative w-full py-4 md:py-6 bg-white hover:bg-brand-50 rounded-xl md:rounded-2xl text-black font-heading font-bold text-lg md:text-xl tracking-tight transition-all transform hover:scale-[1.01] hover:shadow-2xl hover:shadow-white/20 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none overflow-hidden"
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-3 w-full">
+                        <AnimatePresence mode="wait">
+                          {isPending ? (
+                            <motion.span
+                              key="loading"
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -10 }}
+                              className="flex items-center gap-3"
+                            >
+                              <span className="animate-spin text-xl md:text-2xl">✺</span>
+                              {retryCount > 0 ? (
+                                <span className="text-base md:text-xl">Retrying...</span>
+                              ) : (
+                                <span className="text-base md:text-xl">
+                                  {mode === 'lite' ? 'Launching...' : 'Initializing...'}
+                                </span>
+                              )}
+                            </motion.span>
+                          ) : (
+                            <motion.span
+                                key="idle"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="flex items-center gap-3"
+                            >
+                              {mode === 'lite' ? 'Launch Event' : 'Generate Experience'}
+                              <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </span>
+                      <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/50 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                    </button>
+                    <div className="hidden md:flex items-center justify-center mt-4 gap-4">
+                        <p className="text-center text-surface-500 text-xs">
+                        Powered by Rhiz Intelligence • Generates configuration in ~15s
+                        </p>
+                        <Link href="/" className="text-xs text-brand-400 hover:text-brand-300">
+                            Back
+                        </Link>
+                    </div>
+                 </div>
               </div>
             </form>
           </section>
