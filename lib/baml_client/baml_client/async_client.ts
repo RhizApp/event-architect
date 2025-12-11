@@ -24,7 +24,7 @@ import { toBamlError, BamlStream, BamlAbortError, Collector } from "@boundaryml/
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type { partial_types } from "./partial_types"
 import type * as types from "./types"
-import type {AttendeeProfile, Branding, ConnectionReason, EngagementConfig, EventAppConfig, EventContent, MatchmakingConfig, PartialEventDetails, RelationshipFeatures, SampleAttendee, ScheduleSession, SessionConfig, Speaker} from "./types"
+import type {AttendeeProfile, Branding, ConnectionReason, EngagementConfig, EventAppConfig, EventContent, MatchmakingConfig, PartialEventDetails, RelationshipFeatures, SampleAttendee, ScheduleSession, SessionConfig, Speaker, TicketTier, TicketingConfig} from "./types"
 import type TypeBuilder from "./type_builder"
 import { AsyncHttpRequest, AsyncHttpStreamRequest } from "./async_request"
 import { LlmResponseParser, LlmStreamParser } from "./parser"

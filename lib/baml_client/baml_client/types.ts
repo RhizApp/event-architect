@@ -84,6 +84,7 @@ export interface EventAppConfig {
   branding: Branding
   designNotes: string
   content: EventContent
+  ticketing?: TicketingConfig | null
   
 }
 
@@ -154,5 +155,20 @@ export interface Speaker {
   company: string
   imageUrl: string
   bio: string
+  
+}
+
+export interface TicketTier {
+  id: string
+  name: string
+  price: number
+  description: string
+  features: string[]
+  
+}
+
+export interface TicketingConfig {
+  enabled: boolean
+  tiers: TicketTier[]
   
 }

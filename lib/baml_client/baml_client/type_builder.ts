@@ -35,7 +35,7 @@ export default class TypeBuilder {
     
     EngagementConfig: ClassViewer<'EngagementConfig', "chatEnabled" | "qnaEnabled" | "pollsEnabled" | "liveFeedEnabled">;
     
-    EventAppConfig: ClassViewer<'EventAppConfig', "primaryGoals" | "matchmakingConfig" | "sessionConfig" | "engagementConfig" | "relationshipFeatures" | "branding" | "designNotes" | "content">;
+    EventAppConfig: ClassViewer<'EventAppConfig', "primaryGoals" | "matchmakingConfig" | "sessionConfig" | "engagementConfig" | "relationshipFeatures" | "branding" | "designNotes" | "content" | "ticketing">;
     
     EventContent: ClassViewer<'EventContent', "eventName" | "tagline" | "date" | "location" | "speakers" | "schedule" | "sampleAttendees">;
     
@@ -53,12 +53,16 @@ export default class TypeBuilder {
     
     Speaker: ClassViewer<'Speaker', "name" | "role" | "company" | "imageUrl" | "bio">;
     
+    TicketTier: ClassViewer<'TicketTier', "id" | "name" | "price" | "description" | "features">;
+    
+    TicketingConfig: ClassViewer<'TicketingConfig', "enabled" | "tiers">;
+    
     
 
     constructor() {
         this.tb = new _TypeBuilder({
           classes: new Set([
-            "AttendeeProfile","Branding","ConnectionReason","EngagementConfig","EventAppConfig","EventContent","MatchmakingConfig","PartialEventDetails","RelationshipFeatures","SampleAttendee","ScheduleSession","SessionConfig","Speaker",
+            "AttendeeProfile","Branding","ConnectionReason","EngagementConfig","EventAppConfig","EventContent","MatchmakingConfig","PartialEventDetails","RelationshipFeatures","SampleAttendee","ScheduleSession","SessionConfig","Speaker","TicketTier","TicketingConfig",
           ]),
           enums: new Set([
             
@@ -83,7 +87,7 @@ export default class TypeBuilder {
         ]);
         
         this.EventAppConfig = this.tb.classViewer("EventAppConfig", [
-          "primaryGoals","matchmakingConfig","sessionConfig","engagementConfig","relationshipFeatures","branding","designNotes","content",
+          "primaryGoals","matchmakingConfig","sessionConfig","engagementConfig","relationshipFeatures","branding","designNotes","content","ticketing",
         ]);
         
         this.EventContent = this.tb.classViewer("EventContent", [
@@ -116,6 +120,14 @@ export default class TypeBuilder {
         
         this.Speaker = this.tb.classViewer("Speaker", [
           "name","role","company","imageUrl","bio",
+        ]);
+        
+        this.TicketTier = this.tb.classViewer("TicketTier", [
+          "id","name","price","description","features",
+        ]);
+        
+        this.TicketingConfig = this.tb.classViewer("TicketingConfig", [
+          "enabled","tiers",
         ]);
         
         

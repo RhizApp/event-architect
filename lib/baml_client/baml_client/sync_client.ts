@@ -22,7 +22,7 @@ import type { BamlRuntime, FunctionResult, BamlCtxManager, Image, Audio, Pdf, Vi
 import { toBamlError, BamlAbortError, type HTTPRequest } from "@boundaryml/baml"
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type * as types from "./types"
-import type {AttendeeProfile, Branding, ConnectionReason, EngagementConfig, EventAppConfig, EventContent, MatchmakingConfig, PartialEventDetails, RelationshipFeatures, SampleAttendee, ScheduleSession, SessionConfig, Speaker} from "./types"
+import type {AttendeeProfile, Branding, ConnectionReason, EngagementConfig, EventAppConfig, EventContent, MatchmakingConfig, PartialEventDetails, RelationshipFeatures, SampleAttendee, ScheduleSession, SessionConfig, Speaker, TicketTier, TicketingConfig} from "./types"
 import type TypeBuilder from "./type_builder"
 import { HttpRequest, HttpStreamRequest } from "./sync_request"
 import { LlmResponseParser, LlmStreamParser } from "./parser"

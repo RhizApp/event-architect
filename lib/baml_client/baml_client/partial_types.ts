@@ -20,7 +20,7 @@ $ pnpm add @boundaryml/baml
 
 import type { Image, Audio, Pdf, Video } from "@boundaryml/baml"
 import type { Checked, Check } from "./types"
-import type {  AttendeeProfile,  Branding,  ConnectionReason,  EngagementConfig,  EventAppConfig,  EventContent,  MatchmakingConfig,  PartialEventDetails,  RelationshipFeatures,  SampleAttendee,  ScheduleSession,  SessionConfig,  Speaker } from "./types"
+import type {  AttendeeProfile,  Branding,  ConnectionReason,  EngagementConfig,  EventAppConfig,  EventContent,  MatchmakingConfig,  PartialEventDetails,  RelationshipFeatures,  SampleAttendee,  ScheduleSession,  SessionConfig,  Speaker,  TicketTier,  TicketingConfig } from "./types"
 import type * as types from "./types"
 
 /******************************************************************************
@@ -65,6 +65,7 @@ export namespace partial_types {
       branding?: Branding | null
       designNotes?: string | null
       content?: EventContent | null
+      ticketing?: TicketingConfig | null
     }
     export interface EventContent {
       eventName?: string | null
@@ -119,5 +120,16 @@ export namespace partial_types {
       company?: string | null
       imageUrl?: string | null
       bio?: string | null
+    }
+    export interface TicketTier {
+      id?: string | null
+      name?: string | null
+      price?: number | null
+      description?: string | null
+      features: string[]
+    }
+    export interface TicketingConfig {
+      enabled?: boolean | null
+      tiers: TicketTier[]
     }
 }
