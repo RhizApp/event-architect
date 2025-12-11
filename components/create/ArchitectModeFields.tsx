@@ -1,5 +1,7 @@
 import { ScrapedEventData } from "@/lib/types";
 
+import { AssetUpload } from "@/components/create/AssetUpload";
+
 interface ArchitectModeFieldsProps {
   defaultValues?: {
     eventBasics?: string;
@@ -97,6 +99,23 @@ export function ArchitectModeFields({ defaultValues, scrapedData, isPending }: A
               ↓
             </div>
           </div>
+        </div>
+        <div className="pt-4 border-t border-white/5 space-y-4">
+             <h3 className="text-sm font-mono text-brand-300 uppercase tracking-widest">
+                06 // Brand Assets
+             </h3>
+             <div className="grid md:grid-cols-2 gap-6">
+                 <AssetUpload 
+                    label="Event Logo" 
+                    name="logo" 
+                    description="Used in header and emails." 
+                 />
+                 <AssetUpload 
+                    label="Hero Background" 
+                    name="background" 
+                    description="Main banner image (1920x1080)."
+                 />
+             </div>
         </div>
       </div>
     </>

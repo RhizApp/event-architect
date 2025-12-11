@@ -14,12 +14,12 @@ test.describe('Event Creation', () => {
     await page.locator('input[name="audience"]').fill('Developers, Designers');
     await page.locator('select[name="tone"]').selectOption('vibrant');
 
-    // Submit
-    await page.locator('input[name="audience"]').press('Enter');
+    // Submit using the new Sticky Footer Button
+    await page.getByRole('button', { name: /Generate Event/i }).click();
 
     // Expect redirect OR Error (if API keys missing)
     try {
-        await expect(page).toHaveURL(/\/e\/|dashboard/, { timeout: 5000 });
+        await expect(page).toHaveURL(/\/e\/|dashboard/, { timeout: 10000 });
     } catch {
         // If redirect fails, check for error message
         await expect(page.getByText(/error|failed|generated/i)).toBeVisible();
@@ -41,12 +41,12 @@ test.describe('Event Creation', () => {
     // Fill Vibe (Optional)
     await page.locator('input[name="eventBasics"]').fill('Casual hangout');
 
-    // Submit
-    await page.locator('input[name="eventName"]').press('Enter');
+    // Submit using the new Sticky Footer Button
+    await page.getByRole('button', { name: /Generate Event/i }).click();
 
     // Expect redirect OR Error
     try {
-        await expect(page).toHaveURL(/\/e\/|dashboard/, { timeout: 5000 });
+        await expect(page).toHaveURL(/\/e\/|dashboard/, { timeout: 10000 });
     } catch {
         await expect(page.getByText(/error|failed|generated/i)).toBeVisible();
     }

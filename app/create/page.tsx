@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition, useCallback } from "react";
+import { useState, useTransition, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 import { generateEventConfig } from "../actions/events";
 import { ScrapedEventData } from "@/lib/types";
 import { ModeSelector } from "@/components/create/ModeSelector";
@@ -10,9 +11,13 @@ import { LiteModeFields } from "@/components/create/LiteModeFields";
 import { ArchitectModeFields } from "@/components/create/ArchitectModeFields";
 import { GenerationError } from "@/components/create/GenerationError";
 import { ImageUploader } from "@/components/create/ImageUploader";
+import { CreateActionBar } from "@/components/create/CreateActionBar";
+import { FlyerGenerator } from "@/components/create/FlyerGenerator";
 
 export default function CreateEventPage() {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -20,9 +25,14 @@ export default function CreateEventPage() {
   const [mode, setMode] = useState<'lite' | 'architect'>('architect');
   const [scrapedData, setScrapedData] = useState<ScrapedEventData | null>(null);
 
+  // Modal States
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isFlyerCreatorOpen, setIsFlyerCreatorOpen] = useState(false);
+
   const handleExtraction = useCallback((data: ScrapedEventData) => {
     console.log("Scraped data:", data);
     setScrapedData(data);
+    setIsScannerOpen(false); // Close modal on success
   }, []);
 
   const handleSubmit = useCallback((formData: FormData) => {
@@ -57,8 +67,14 @@ export default function CreateEventPage() {
     }
   }, [lastFormData, handleSubmit]);
 
+  const triggerSubmit = () => {
+    if (formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-surface-950 bg-noise text-foreground font-sans selection:bg-brand-500/30">
+    <div className="min-h-screen bg-surface-950 bg-noise text-foreground font-sans selection:bg-brand-500/30 pb-32">
       <main className="max-w-4xl mx-auto px-4 md:px-6 py-8 md:py-24">
         {/* Header */}
         <div className="mb-8 md:mb-12 text-center">
@@ -70,7 +86,7 @@ export default function CreateEventPage() {
             </p>
         </div>
 
-        {/* Configuration Cockpit - Centered */}
+        {/* Configuration Cockpit */}
         <div className="animate-slide-up" style={{ animationDelay: "200ms" }}>
           
           <div className="mb-8">
@@ -91,14 +107,7 @@ export default function CreateEventPage() {
 
                 <div className="p-6 md:p-8 space-y-8 relative z-10">
                    
-                   {/* Vision Mode / Image Upload */}
-                   {mode === 'architect' && (
-                     <div className="mb-8">
-                       <ImageUploader onExtractionComplete={handleExtraction} />
-                     </div>
-                   )}
-
-                   <form action={handleSubmit} className="space-y-6">
+                   <form ref={formRef} action={handleSubmit} className="space-y-6">
                       <input type="hidden" name="type" value={mode} />
                       
                       {mode === 'lite' ? (
@@ -112,7 +121,8 @@ export default function CreateEventPage() {
                       
                       {/* Error Display */}
                       {error && (
-                         <GenerationError                             error={error} 
+                         <GenerationError                             
+                             error={error} 
                              onRetry={handleRetry} 
                              isRetrying={isPending}
                              retryCount={retryCount} 
@@ -125,6 +135,62 @@ export default function CreateEventPage() {
 
         </div>
       </main>
+
+      {/* Sticky Action Bar */}
+      <CreateActionBar 
+        onGenerate={triggerSubmit}
+        isPending={isPending}
+        onOpenScanner={() => setIsScannerOpen(true)}
+        onOpenFlyerCreator={() => setIsFlyerCreatorOpen(true)}
+      />
+
+      {/* Scanner Modal */}
+      <AnimatePresence>
+        {isScannerOpen && (
+           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+               <motion.div 
+                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                 onClick={() => setIsScannerOpen(false)}
+                 className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+               />
+               <motion.div 
+                 initial={{ scale: 0.95, opacity: 0 }} 
+                 animate={{ scale: 1, opacity: 1 }} 
+                 exit={{ scale: 0.95, opacity: 0 }} 
+                 className="relative w-full max-w-lg bg-surface-900 border border-white/10 rounded-2xl p-6 shadow-2xl"
+               >
+                   <div className="flex justify-between items-center mb-4">
+                       <h3 className="text-lg font-bold text-white">Scan Event Flyer</h3>
+                       <button onClick={() => setIsScannerOpen(false)} className="text-surface-400 hover:text-white">
+                           <X size={20} />
+                       </button>
+                   </div>
+                   <ImageUploader onExtractionComplete={handleExtraction} />
+               </motion.div>
+           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Flyer Creator Modal */}
+      <FlyerGenerator 
+         isOpen={isFlyerCreatorOpen}
+         onClose={() => setIsFlyerCreatorOpen(false)}
+         onSelect={(imgUrl) => {
+             console.log("Selected flyer:", imgUrl);
+             // Logic to use this image (e.g. set as background or extract from it)
+             // For now just close, or maybe extract details from it too?
+             // Let's analyze it!
+             setIsFlyerCreatorOpen(false);
+             // Create a mock ScrapedData for demo
+             handleExtraction({
+                 title: "AI Generated Rave",
+                 date: "2024-12-31",
+                 location: "Cyber City",
+                 description: "An event generated by AI.",
+                 tone: "vibrant"
+             });
+         }}
+      />
     </div>
   );
 }

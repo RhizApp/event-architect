@@ -14,6 +14,8 @@ export type EventGenerationInputs = {
   audience: string;
   relationshipIntent: string;
   tone: string;
+  logoUrl?: string; 
+  backgroundUrl?: string;
 };
 
 export async function generateEventConfigFromInputs(

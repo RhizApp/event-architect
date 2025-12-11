@@ -44,6 +44,23 @@ export async function generateEventConfig(
   const audience = (formData.get("audience") as string) || "General Audience";
   const relationshipIntent = (formData.get("relationshipIntent") as string) || "medium";
   const tone = (formData.get("tone") as string) || "professional";
+  
+  // Handle Assets (Simple Base64 for MVP, though inefficient)
+  const logoFile = formData.get("logo") as File;
+  const backgroundFile = formData.get("background") as File;
+  
+  let logoUrl: string | undefined;
+  let backgroundUrl: string | undefined;
+
+  if (logoFile && logoFile.size > 0) {
+      const buf = Buffer.from(await logoFile.arrayBuffer());
+      logoUrl = `data:${logoFile.type};base64,${buf.toString('base64')}`;
+  }
+  if (backgroundFile && backgroundFile.size > 0) {
+      const buf = Buffer.from(await backgroundFile.arrayBuffer());
+      backgroundUrl = `data:${backgroundFile.type};base64,${buf.toString('base64')}`;
+  }
+
   const rawType = formData.get("type") as string;
   const eventType = rawType === "lite" || rawType === "architect" ? rawType : "architect";
   const explicitEventName = (formData.get("eventName") as string) || "";
@@ -68,7 +85,9 @@ export async function generateEventConfig(
       goals,
       audience,
       relationshipIntent,
-      tone
+      tone,
+      logoUrl,
+      backgroundUrl
     };
 
     console.log("Generating config for logic:", eventType);
