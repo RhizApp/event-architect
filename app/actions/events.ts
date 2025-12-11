@@ -93,6 +93,34 @@ export async function generateEventConfig(
     console.log("Generating config for logic:", eventType);
     const { config, eventId } = await generateEventConfigFromInputs(inputs);
     
+    // Parse manual ticket tiers
+    const manualTiers: import("@/lib/types").TicketTier[] = [];
+    let i = 0;
+    while (formData.has(`tiers[${i}][name]`)) {
+        manualTiers.push({
+            id: formData.get(`tiers[${i}][id]`) as string || crypto.randomUUID(),
+            name: formData.get(`tiers[${i}][name]`) as string,
+            price: Number(formData.get(`tiers[${i}][price]`)) || 0,
+            currency: "USD",
+            features: [],
+            capacity: 100,
+            description: formData.get(`tiers[${i}][description]`) as string,
+            paymentUrl: formData.get(`tiers[${i}][paymentUrl]`) as string,
+        });
+        i++;
+    }
+
+    // Merge manual tiers with AI tiers
+    if (manualTiers.length > 0) {
+        config.ticketing = {
+            enabled: true,
+            tiers: [
+                ...(config.ticketing?.tiers || []),
+                ...manualTiers
+            ]
+        };
+    }
+
     // 4. Persistence
     await createEventInDb(eventId, config, eventType, userId);
 

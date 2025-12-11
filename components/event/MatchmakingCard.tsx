@@ -1,4 +1,6 @@
 
+"use client";
+
 import { ConnectionSuggestion, Attendee } from "@/lib/types";
 import { Sparkles, MessageCircle, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";

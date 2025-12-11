@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from "react";
 import { EASING, TRANSITIONS } from "./motion-utils";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
-import { RelationshipDetail, OpportunityMatch } from "@/lib/protocol-sdk/types";
+
 import { GraphAttendee } from "@/lib/types";
 import { MatchmakingCard } from "../event/MatchmakingCard";
 import { Attendee } from "@/lib/types"; // Import Attendee specifically for type casting if needed
@@ -467,11 +467,11 @@ export function NetworkingGraph({
                             <MatchmakingCard 
                                suggestion={{
                                    targetAttendeeId: opportunities[0].candidate.person_id,
-                                   score: opportunities[0].opportunity_score || 0.95,
-                                   reasonSummary: opportunities[0].talking_points?.[0] || "High affinity match",
-                                   sharedTags: opportunities[0].common_interests || [],
+                                   score: opportunities[0].suggestion.match_score || 0.95,
+                                   reasonSummary: opportunities[0].suggestion.reasons?.[0] || "High affinity match",
+                                   sharedTags: opportunities[0].candidate.tags || [],
                                    sharedIntents: [],
-                                   talkingPoints: opportunities[0].talking_points || []
+                                   talkingPoints: opportunities[0].suggestion.reasons || []
                                }}
                                targetAttendee={{
                                    // Mapping GraphAttendee(PersonRead) to Attendee
@@ -479,10 +479,10 @@ export function NetworkingGraph({
                                    eventId: "temp",
                                    userId: opportunities[0].candidate.person_id,
                                    rhizIdentityId: opportunities[0].candidate.person_id,
-                                   name: opportunities[0].candidate.preferred_name,
+                                   name: opportunities[0].candidate.preferred_name || "Anonymous",
                                    email: "hidden",
-                                   headline: opportunities[0].candidate.bio,
-                                   tags: opportunities[0].candidate.interests || [],
+                                   headline: opportunities[0].candidate.headline || opportunities[0].candidate.bio_summary || "",
+                                   tags: opportunities[0].candidate.tags || [],
                                    intents: []
                                }}
                                onConnect={() => onNodeClick?.(opportunities[0].candidate as unknown as GraphAttendee)}

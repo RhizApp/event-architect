@@ -1,6 +1,7 @@
 import { ScrapedEventData } from "@/lib/types";
 
 import { AssetUpload } from "@/components/create/AssetUpload";
+import { TicketTierFields } from "@/components/create/TicketTierFields";
 
 interface ArchitectModeFieldsProps {
   defaultValues?: {
@@ -29,6 +30,36 @@ export function ArchitectModeFields({ defaultValues, scrapedData, isPending }: A
           required
           disabled={isPending}
         />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-8 md:gap-12 animate-fade-in">
+         <div className="space-y-4 group">
+            <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+              02 // Coordinates
+            </label>
+            <input
+               type="text"
+               name="eventLocation"
+               defaultValue={scrapedData?.location}
+               placeholder="e.g. 123 Innovation Dr, SF"
+               className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
+               required
+               disabled={isPending}
+            />
+         </div>
+         <div className="space-y-4 group">
+            <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+              03 // Time Sync
+            </label>
+            <input
+               type="datetime-local"
+               name="eventDate"
+               defaultValue={scrapedData?.date}
+               className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
+               required
+               disabled={isPending}
+            />
+         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 md:gap-12 animate-fade-in">
@@ -104,18 +135,15 @@ export function ArchitectModeFields({ defaultValues, scrapedData, isPending }: A
              <h3 className="text-sm font-mono text-brand-300 uppercase tracking-widest">
                 06 // Brand Assets
              </h3>
-             <div className="grid md:grid-cols-2 gap-6">
-                 <AssetUpload 
-                    label="Event Logo" 
-                    name="logo" 
-                    description="Used in header and emails." 
-                 />
                  <AssetUpload 
                     label="Hero Background" 
                     name="background" 
                     description="Main banner image (1920x1080)."
                  />
-             </div>
+        </div>
+
+        <div className="pt-8 border-t border-white/5">
+             <TicketTierFields />
         </div>
       </div>
     </>

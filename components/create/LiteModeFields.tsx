@@ -4,6 +4,8 @@ import { VIBE_PRESETS } from "@/lib/constants";
 interface LiteModeFieldsProps {
   defaultValues?: {
     eventName?: string;
+    eventDate?: string;
+    eventLocation?: string;
     eventBasics?: string;
     // tone is handled via state in this component, might be tricky to prefill without more logic
   };
@@ -28,6 +30,36 @@ export function LiteModeFields({ defaultValues, isPending }: LiteModeFieldsProps
           required
           disabled={isPending}
         />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2 group">
+           <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+              When
+           </label>
+           <input
+              type="datetime-local"
+              name="eventDate"
+              defaultValue={defaultValues?.eventDate}
+              className="w-full bg-transparent border-0 border-b border-surface-800 focus:border-brand-500 text-lg text-surface-200 placeholder-surface-700 py-2 px-0 outline-none transition-all focus:ring-0"
+              required
+              disabled={isPending}
+           />
+        </div>
+        <div className="space-y-2 group">
+           <label className="text-xs font-mono text-brand-300 uppercase tracking-widest group-focus-within:text-brand-400 transition-colors">
+              Where
+           </label>
+           <input
+              type="text"
+              name="eventLocation"
+              defaultValue={defaultValues?.eventLocation}
+              placeholder="e.g. Central Park"
+              className="w-full bg-transparent border-0 border-b border-surface-800 focus:border-brand-500 text-lg text-surface-200 placeholder-surface-700 py-2 px-0 outline-none transition-all focus:ring-0"
+              required
+              disabled={isPending}
+           />
+        </div>
       </div>
 
       {/* 2. Manual Description (Optional but Magic) */}

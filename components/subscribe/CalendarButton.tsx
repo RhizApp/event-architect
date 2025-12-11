@@ -1,4 +1,6 @@
 
+"use client";
+
 import { Calendar, Check } from "lucide-react";
 import { useState } from "react";
 import { Event } from "@/lib/types";

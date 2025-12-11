@@ -16,8 +16,12 @@ import { FlyerGenerator } from "@/components/create/FlyerGenerator";
 import { UrlImportModal } from "@/components/create/UrlImportModal";
 import { GenerationReveal } from "@/components/create/GenerationReveal";
 
+import { useAuth } from "@clerk/nextjs";
+import { AuthModal } from "@/components/auth/AuthModal";
+
 export default function CreateEventPage() {
   const router = useRouter();
+  const { userId, isLoaded } = useAuth(); // Client-side auth check
   const formRef = useRef<HTMLFormElement>(null);
   
   const [isPending, startTransition] = useTransition();
@@ -31,6 +35,7 @@ export default function CreateEventPage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isFlyerCreatorOpen, setIsFlyerCreatorOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false); // New Auth State
 
   const handleExtraction = useCallback((data: ScrapedEventData) => {
     console.log("Scraped data:", data);
@@ -71,8 +76,15 @@ export default function CreateEventPage() {
   }, [lastFormData, handleSubmit]);
 
   const triggerSubmit = () => {
+    if (!isLoaded) return; // Wait for auth to load
+    
+    if (!userId) {
+        setIsAuthModalOpen(true);
+        return;
+    }
+
     if (formRef.current) {
-      formRef.current.requestSubmit();
+      formRef.current.requestSubmit(); 
     }
   };
 
@@ -118,9 +130,11 @@ export default function CreateEventPage() {
                             isPending={isPending} 
                             defaultValues={scrapedData ? {
                                 eventName: scrapedData.title,
+                                eventDate: scrapedData.date,
+                                eventLocation: scrapedData.location,
                                 eventBasics: scrapedData.description 
                                    ? scrapedData.description 
-                                   : (scrapedData.date && scrapedData.location ? `${scrapedData.date} at ${scrapedData.location}` : undefined)
+                                   : undefined
                             } : undefined}
                           />
                       ) : (
@@ -217,6 +231,11 @@ export default function CreateEventPage() {
       <AnimatePresence>
          {isPending && <GenerationReveal />}
       </AnimatePresence>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </div>
   );
 }

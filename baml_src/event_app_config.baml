@@ -7,6 +7,20 @@ class EventAppConfig {
   branding Branding
   designNotes string @description("Explanation of design choices")
   content EventContent @description("Actual event content for display")
+  ticketing TicketingConfig?
+}
+
+class TicketingConfig {
+  enabled bool
+  tiers TicketTier[]
+}
+
+class TicketTier {
+  id string
+  name string
+  price float @description("Price in USD")
+  description string
+  features string[]
 }
 
 class EventContent {
@@ -110,6 +124,11 @@ function GenerateEventAppConfig(
     - If tone is "professional", use subdued colors. If "vibrant", use bold colors.
     - Ensure at least one relationship feature is enabled.
     
+    Guidelines for Ticketing:
+    - Suggest 2-3 ticket tiers based on the event tone and audience.
+    - Example: "General Admission", "VIP", "Student", "Early Bird".
+    - Prices should be realistic for the event type (e.g., $50 for casual, $1000 for luxury).
+
     Guidelines for Event Content:
     - Generate a creative, realistic event name and tagline based on the event basics
     - Use the EXACT date provided: {{ eventDate }}
