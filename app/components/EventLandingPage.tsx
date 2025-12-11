@@ -20,6 +20,8 @@ import { MapPreviewCard } from '@/components/MapPreviewCard';
 import { EditControls } from '@/components/edit/EditControls';
 import { updateEventConfig } from '@/app/actions/events';
 import { Pencil } from 'lucide-react';
+import { CalendarButton } from '@/components/subscribe/CalendarButton';
+
 
 interface EventLandingPageProps {
   config: EventAppConfig & { eventId?: string };
@@ -301,12 +303,32 @@ export function EventLandingPage({ config: initialConfig }: EventLandingPageProp
                 ? 'Our AI-powered matchmaking connects you with the right people effortlessly.'
                 : 'Connect with like-minded peers in an organic, curated environment.'}
             </p>
-            <button
-              onClick={() => setIsRegistrationOpen(true)}
-              className="px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-neutral-200 transition-colors"
-            >
-              {userProfile ? 'Update Profile' : 'Join the Network'}
-            </button>
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => setIsRegistrationOpen(true)}
+                className="px-8 py-3 bg-white text-black rounded-full font-bold hover:bg-neutral-200 transition-colors"
+              >
+                {userProfile ? 'Update Profile' : 'Join the Network'}
+              </button>
+              
+              {/* Diff: Calendar Subscription */}
+              {config.content && (
+                 <CalendarButton 
+                   event={{
+                       id: config.eventId || "temp",
+                       name: config.content.eventName || "Event",
+                       startDate: new Date(config.content.date || Date.now()),
+                       endDate: new Date(config.content.date || Date.now()), // Assuming 1 day event for now if no end date
+                       venueType: "in_person", // Default
+                       status: "published",
+                       organizationId: "org-1",
+                       slug: config.eventId || "slug",
+                       timeZone: "UTC"
+                   }} 
+                   variant="outline"
+                 />
+              )}
+            </div>
             {pendingCount > 0 && (
               <div className="mt-3 text-sm text-amber-200 flex items-center gap-2">
                 <span className="inline-flex items-center justify-center rounded-full bg-amber-500/20 text-amber-100 px-2 py-0.5 text-xs">
