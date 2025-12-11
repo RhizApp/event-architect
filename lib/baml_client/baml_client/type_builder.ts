@@ -41,6 +41,8 @@ export default class TypeBuilder {
     
     MatchmakingConfig: ClassViewer<'MatchmakingConfig', "enabled" | "inputSignals" | "matchTypes" | "meetingDurations">;
     
+    PartialEventDetails: ClassViewer<'PartialEventDetails', "eventName" | "eventDate" | "eventLocation" | "description" | "vibe">;
+    
     RelationshipFeatures: ClassViewer<'RelationshipFeatures', "relationshipScoresVisible" | "warmPathHintsEnabled" | "introRequestsEnabled">;
     
     SampleAttendee: ClassViewer<'SampleAttendee', "id" | "name" | "imageUrl" | "interests">;
@@ -56,7 +58,7 @@ export default class TypeBuilder {
     constructor() {
         this.tb = new _TypeBuilder({
           classes: new Set([
-            "AttendeeProfile","Branding","ConnectionReason","EngagementConfig","EventAppConfig","EventContent","MatchmakingConfig","RelationshipFeatures","SampleAttendee","ScheduleSession","SessionConfig","Speaker",
+            "AttendeeProfile","Branding","ConnectionReason","EngagementConfig","EventAppConfig","EventContent","MatchmakingConfig","PartialEventDetails","RelationshipFeatures","SampleAttendee","ScheduleSession","SessionConfig","Speaker",
           ]),
           enums: new Set([
             
@@ -90,6 +92,10 @@ export default class TypeBuilder {
         
         this.MatchmakingConfig = this.tb.classViewer("MatchmakingConfig", [
           "enabled","inputSignals","matchTypes","meetingDurations",
+        ]);
+        
+        this.PartialEventDetails = this.tb.classViewer("PartialEventDetails", [
+          "eventName","eventDate","eventLocation","description","vibe",
         ]);
         
         this.RelationshipFeatures = this.tb.classViewer("RelationshipFeatures", [

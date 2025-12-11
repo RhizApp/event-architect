@@ -106,6 +106,15 @@ export interface MatchmakingConfig {
   
 }
 
+export interface PartialEventDetails {
+  eventName?: string | null
+  eventDate?: string | null
+  eventLocation?: string | null
+  description?: string | null
+  vibe?: string | null
+  
+}
+
 export interface RelationshipFeatures {
   relationshipScoresVisible: boolean
   warmPathHintsEnabled: boolean
