@@ -45,3 +45,4 @@ export * from './types';
 
 // Note: Identity client is in sdk/identity.ts (separate file)
 // Import it directly: import { IdentityClient } from '@rhiz/protocol-sdk/identity'
+export { IdentityHelper } from './identity';

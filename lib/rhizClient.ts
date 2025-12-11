@@ -1,4 +1,4 @@
-import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient, ContextTagsClient, ContextTagCreate, ZkClient } from "./protocol-sdk";
+import { RhizClient, InteractionCreate, PeopleClient, PersonCreate, NlpClient, ContextTagsClient, ContextTagCreate, ZkClient, IdentityHelper } from "./protocol-sdk";
 import { RelationshipDetail, OpportunityMatch, PersonRead } from "./protocol-sdk/types";
 import { Session } from "./types";
 import { withTimeout } from "./errorHandling";
@@ -9,6 +9,12 @@ const getAccessToken = async () => process.env.RHIZ_API_TOKEN || null;
 export const ownerId = process.env.RHIZ_OWNER_ID || "event-maker-app";
 
 export const client = new RhizClient({
+  baseUrl,
+  getAccessToken,
+});
+
+// Initialize Identity Helper (moved to protocol layer)
+const identityHelper = new IdentityHelper({
   baseUrl,
   getAccessToken,
 });
@@ -50,65 +56,31 @@ export const rhizClient = {
     avatarUrl?: string;
   }): Promise<{ id: string; externalUserId?: string; did?: string; handle?: string }> => {
     try {
-      // Try to find existing person by email if provided
-      if (args.email) {
-        try {
-          const existingPeople = await withTimeout(
-            peopleClient.listPeople({
-              owner_id: ownerId,
-              email: args.email,
-              limit: 1,
-            }),
-            3000,
-            "Identity search timed out"
-          );
-          
-          if (existingPeople.people.length > 0) {
-            const person = existingPeople.people[0];
-            console.log("Rhiz: Found existing person", person.person_id);
-            return {
-              id: person.person_id,
-              externalUserId: args.externalUserId,
-              did: person.did,
-              handle: person.handle,
-            };
-          }
-        } catch (searchError) {
-          // If search fails, continue to create new person
-          console.warn("Rhiz: Failed to search for existing person (or timed out)", searchError);
-        }
+      // Use the Protocol SDK's IdentityHelper
+      const result = await withTimeout(
+        identityHelper.resolveIdentity({
+            ...args,
+            ownerId
+        }),
+        5000,
+        "Identity resolution timed out"
+      );
+
+      console.log(result.isNew ? `Rhiz: Created new person ${result.id}` : `Rhiz: Found existing person ${result.id}`);
+
+      if (result.isNew) {
+         // FIRE AND FORGET: "Warm Start" Strategy (Seed Data)
+         rhizClient.enrichIdentity({ 
+            personId: result.id, 
+            email: args.email 
+         }).catch(e => console.warn("Rhiz: Background enrichment failed", e));
       }
 
-      // Create new person
-      const personData: PersonCreate = {
-        owner_id: ownerId,
-        legal_name: args.name || args.email || "Anonymous User",
-        preferred_name: args.name,
-        emails: args.email ? [args.email] : [],
-        tags: args.tags || [],
-        social_handles: args.avatarUrl ? { avatar: args.avatarUrl } : undefined,
-      };
-
-      const person = await withTimeout(
-        peopleClient.createPerson(personData),
-        5000,
-        "Identity creation timed out"
-      );
-      
-      console.log("Rhiz: Created new person", person.person_id);
-      
-      // FIRE AND FORGET: "Warm Start" Strategy (Seed Data)
-      // We proactively enrich the profile to avoid the "Empty Room" problem.
-      rhizClient.enrichIdentity({ 
-          personId: person.person_id, 
-          email: args.email 
-      }).catch(e => console.warn("Rhiz: Background enrichment failed", e));
-
       return {
-        id: person.person_id,
-        externalUserId: args.externalUserId,
-        did: person.did,
-        handle: person.handle,
+        id: result.id,
+        externalUserId: result.externalUserId,
+        did: result.did,
+        handle: result.handle,
       };
     } catch (error) {
       console.warn("Rhiz: Failed to ensure identity, using fallback", error);
