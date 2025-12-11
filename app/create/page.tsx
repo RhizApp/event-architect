@@ -4,7 +4,7 @@ import { useState, useTransition, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { generateEventConfig } from "../actions/events";
-import { EventAppConfig } from "@/lib/types";
+import { EventAppConfig, ScrapedEventData } from "@/lib/types";
 import { ModeSelector } from "@/components/create/ModeSelector";
 import { LiteModeFields } from "@/components/create/LiteModeFields";
 import { ArchitectModeFields } from "@/components/create/ArchitectModeFields";
@@ -19,10 +19,9 @@ export default function CreateEventPage() {
   const [lastFormData, setLastFormData] = useState<FormData | null>(null);
   const [mode, setMode] = useState<'lite' | 'architect'>('architect');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [scrapedData, setScrapedData] = useState<any | null>(null);
+  const [scrapedData, setScrapedData] = useState<ScrapedEventData | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleExtraction = useCallback((data: any) => {
+  const handleExtraction = useCallback((data: ScrapedEventData) => {
     console.log("Scraped data:", data);
     setScrapedData(data);
   }, []);

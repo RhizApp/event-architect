@@ -7,6 +7,17 @@ export type GraphAttendee = PersonRead & {
   interests?: string[];
 };
 
+export type ScrapedEventData = {
+  title?: string;
+  date?: string;
+  location?: string;
+  description?: string;
+  hosts?: string[];
+  goals?: string;
+  audience?: string;
+  tone?: string;
+};
+
 export type Organization = {
   id: string;
   name: string;

@@ -6,12 +6,13 @@ import { useDropzone } from "react-dropzone"; // You might need to install this 
 // Checking package.json... it wasn't there. I'll stick to a simple input for now or standard drag/drop using standard generic HTML5 events to avoid new deps if possible,
 // but for "Vision Mode" a nice UI is expected. I'll use standard events.
 
-import { extractDetailsFromImage } from "@/app/actions/events"; // We'll need to expose this action 
+import { extractDetailsFromImage } from "@/app/actions/events"; 
+import { ScrapedEventData } from "@/lib/types";
 // Wait, I can't import server action directly like this in some setups if it's not exposed as a simpler function,
 // but in Next.js App Router we can.
 
 interface ImageUploaderProps {
-  onExtractionComplete: (data: any) => void;
+  onExtractionComplete: (data: ScrapedEventData) => void;
 }
 
 export function ImageUploader({ onExtractionComplete }: ImageUploaderProps) {

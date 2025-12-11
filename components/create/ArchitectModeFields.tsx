@@ -1,3 +1,5 @@
+import { ScrapedEventData } from "@/lib/types";
+
 interface ArchitectModeFieldsProps {
   defaultValues?: {
     eventBasics?: string;
@@ -6,9 +8,10 @@ interface ArchitectModeFieldsProps {
     tone?: string;
     relationshipIntent?: string;
   };
+  scrapedData?: ScrapedEventData | null;
 }
 
-export function ArchitectModeFields({ defaultValues }: ArchitectModeFieldsProps) {
+export function ArchitectModeFields({ defaultValues, scrapedData }: ArchitectModeFieldsProps) {
   return (
     <>
       <div className="space-y-4 group animate-fade-in">
@@ -17,7 +20,7 @@ export function ArchitectModeFields({ defaultValues }: ArchitectModeFieldsProps)
         </label>
         <textarea
           name="eventBasics"
-          defaultValue={defaultValues?.eventBasics}
+          defaultValue={scrapedData?.description ? `${scrapedData.title || ''} - ${scrapedData.description}` : defaultValues?.eventBasics}
           placeholder="Describe your event... e.g. 'A high-energy hackathon in Tokyo for 200 crypto-natives looking to build the future of privacy.'"
           className="w-full bg-surface-950 border-0 border-b-2 border-surface-800 focus:border-brand-500 text-xl md:text-3xl font-light text-white placeholder-surface-700 py-3 md:py-4 px-0 resize-none outline-none transition-all focus:ring-0 min-h-[140px] md:min-h-[160px] leading-tight"
           required
@@ -31,6 +34,7 @@ export function ArchitectModeFields({ defaultValues }: ArchitectModeFieldsProps)
           </label>
           <input
             name="goals"
+            defaultValue={scrapedData?.goals}
             placeholder="Networking, Dealflow..."
             className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
             required
@@ -44,6 +48,7 @@ export function ArchitectModeFields({ defaultValues }: ArchitectModeFieldsProps)
           </label>
           <input
             name="audience"
+            defaultValue={scrapedData?.audience}
             placeholder="Founders, VCs, Builders..."
             className="w-full bg-transparent border-0 border-b border-surface-700 focus:border-brand-500 text-lg md:text-xl text-white placeholder-surface-600 py-3 px-0 outline-none transition-all focus:ring-0"
           />
@@ -59,6 +64,7 @@ export function ArchitectModeFields({ defaultValues }: ArchitectModeFieldsProps)
           <div className="relative">
             <select
               name="tone"
+              defaultValue={scrapedData?.tone?.toLowerCase() || "professional"}
               className="w-full appearance-none bg-surface-800/50 hover:bg-surface-800 text-white rounded-xl px-4 md:px-6 py-3 md:py-4 outline-none border border-surface-700 focus:border-brand-500 transition-all cursor-pointer text-base md:text-lg font-medium"
             >
               <option value="professional">Professional & Crisp</option>
