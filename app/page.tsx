@@ -14,6 +14,21 @@ export default function Home() {
           <div className="absolute top-[40%] left-[20%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[80px] animate-pulse-slow" />
       </div>
 
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-6 flex items-center justify-between pointer-events-none">
+         <div className="flex items-center gap-3 pointer-events-auto">
+            <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 flex items-center justify-center text-white">
+               {/* eslint-disable-next-line @next/next/no-img-element */}
+               <img src="/logo.svg" alt="Event Architect Logo" className="w-6 h-6" />
+            </div>
+            <span className="text-xl font-heading font-bold text-white tracking-tight">Event Architect</span>
+         </div>
+         
+         <nav className="hidden md:flex items-center gap-6 pointer-events-auto">
+             <Link href="/sign-in" className="text-sm font-medium text-surface-300 hover:text-white transition-colors">Sign In</Link>
+             <Link href="/create" className="px-4 py-2 bg-white text-black text-sm font-bold rounded-full hover:bg-brand-50 transition-colors">Get Started</Link>
+         </nav>
+      </header>
+
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-20 lg:pt-32 pb-24 min-h-screen flex flex-col justify-center">
         <div className="lg:flex lg:items-center lg:gap-16">
           {/* Left Side: Text Content */}

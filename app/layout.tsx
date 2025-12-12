@@ -15,8 +15,37 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Rhiz Event Architect | Intelligent Event Design",
-  description: "Design identity-aware event experiences powered by Rhiz Protocol.",
+  title: "Event Architect | AI-Powered Event Design",
+  description: "Design identity-aware event experiences with AI-powered networking, smart matchmaking, and seamless registration. Powered by Rhiz Protocol.",
+  keywords: ["event management", "AI events", "networking", "matchmaking", "event design", "Rhiz Protocol"],
+  authors: [{ name: "Rhiz" }],
+  creator: "Rhiz",
+  publisher: "Rhiz",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://eventarchitect.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Event Architect",
+    title: "Event Architect | AI-Powered Event Design",
+    description: "Design identity-aware event experiences with AI-powered networking, smart matchmaking, and seamless registration.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Event Architect | AI-Powered Event Design",
+    description: "Design identity-aware event experiences with AI-powered networking and smart matchmaking.",
+    creator: "@RhizProtocol",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

@@ -5,7 +5,13 @@ export const EventFooter = () => {
     <footer className="bg-black text-white py-20 border-t border-white/10">
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
         <div className="md:col-span-2 space-y-6">
-          <h3 className="text-2xl font-serif font-bold">Convergence Intelligence Summit</h3>
+          <div className="flex items-center gap-3 mb-4">
+             <div className="w-8 h-8 flex items-center justify-center text-white">
+               {/* eslint-disable-next-line @next/next/no-img-element */}
+               <img src="/logo.svg" alt="Event Architect Logo" className="w-full h-full" />
+             </div>
+             <h3 className="text-xl font-heading font-bold text-white">Event Architect</h3>
+          </div>
           <p className="text-neutral-400 max-w-md">
             Coordination replaces competition when networks can see themselves.
             <br />
