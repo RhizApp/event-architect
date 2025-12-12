@@ -20,7 +20,7 @@ export default function Home() {
                {/* eslint-disable-next-line @next/next/no-img-element */}
                <img src="/logo.svg" alt="Event Architect Logo" className="w-6 h-6" />
             </div>
-            <span className="text-xl font-heading font-bold text-white tracking-tight">Event Architect</span>
+            <span className="text-xl font-heading font-bold text-white tracking-tight">EventManage.ai</span>
          </div>
          
          <nav className="hidden md:flex items-center gap-6 pointer-events-auto">
@@ -35,9 +35,9 @@ export default function Home() {
           <div className="lg:w-1/2 space-y-10 animate-fade-in text-center lg:text-left">
             <div className="space-y-6">
               <h1 className="text-6xl lg:text-8xl font-heading font-bold tracking-tighter text-white leading-[0.9]">
-                Event <br />
+                Intelligent <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-brand-500">
-                  Architect
+                  Event Management
                 </span>
               </h1>
               <p className="text-xl text-surface-300 font-light max-w-lg mx-auto lg:mx-0 leading-relaxed">
