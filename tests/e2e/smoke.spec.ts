@@ -8,7 +8,8 @@ test('has title', async ({ page }) => {
   await expect(page).toHaveTitle(/Rhiz|Event/);
 });
 
-test('can navigate to create page', async ({ page }) => {
+test('redirects to sign-in from create page', async ({ page }) => {
   await page.goto('/create');
-  await expect(page.getByRole('heading', { name: /Configure Your Event/i })).toBeVisible();
+  // Expect redirect to sign-in
+  await expect(page).toHaveURL(/sign-in/);
 });

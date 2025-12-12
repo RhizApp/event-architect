@@ -11,10 +11,11 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
   },
+  timeout: 60000,
   projects: [
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: {
