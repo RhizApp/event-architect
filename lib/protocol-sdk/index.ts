@@ -1,5 +1,5 @@
 /**
- * Rhiz Protocol TypeScript SDK v0.2.0
+ * Rhiz Protocol TypeScript SDK v0.4.2
  * 
  * Complete client library for the Rhiz Protocol API
  */
@@ -43,6 +43,5 @@ export type { ZkClientOptions } from './zk';
 // All types
 export * from './types';
 
-// Note: Identity client is in sdk/identity.ts (separate file)
-// Import it directly: import { IdentityClient } from '@rhiz/protocol-sdk/identity'
+// Identity helper for identity resolution workflows
 export { IdentityHelper } from './identity';

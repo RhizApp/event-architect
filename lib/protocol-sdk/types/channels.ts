@@ -6,7 +6,7 @@
 
 export interface ChannelBase {
   name: string;
-  channel_metadata?: Record<string, unknown>;
+  channel_metadata?: Record<string, any>;
 }
 
 export interface ChannelCreate extends ChannelBase {
@@ -15,7 +15,7 @@ export interface ChannelCreate extends ChannelBase {
 
 export interface ChannelUpdate {
   name?: string;
-  channel_metadata?: Record<string, unknown>;
+  channel_metadata?: Record<string, any>;
 }
 
 export interface ChannelRead extends ChannelBase {

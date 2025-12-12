@@ -8,11 +8,13 @@ import {
   PersonUpdate,
   PersonListResponse,
   PersonBulkResponse,
+  PersonDetail,
   OrganizationMembershipCreate,
   OrganizationMembershipRead,
   PeopleQueryParams,
 } from './types';
 
+// Re-export for convenience
 export type { PersonCreate };
 
 export interface PeopleClientOptions {
@@ -122,6 +124,14 @@ export class PeopleClient {
   }
 
   /**
+   * Resolve an identity by handle, email, or wallet address.
+   */
+  async resolveIdentity(query: string): Promise<PersonRead> {
+    const params = new URLSearchParams({ query });
+    return this.fetch<PersonRead>(`/v1/protocol/people/resolve?${params}`);
+  }
+
+  /**
    * Bulk create people
    */
   async bulkCreatePeople(people: PersonCreate[]): Promise<PersonBulkResponse> {
@@ -166,3 +176,4 @@ export class PeopleClient {
     );
   }
 }
+

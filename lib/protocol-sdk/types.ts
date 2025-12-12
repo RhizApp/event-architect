@@ -267,7 +267,7 @@ export interface GoalCreate {
   priority: GoalPriority;
   target_date?: string; // ISO date
   context_tags?: string[];
-  constraints?: Record<string, unknown>;
+  constraints?: Record<string, any>;
 }
 
 export interface GoalUpdate {
@@ -278,7 +278,7 @@ export interface GoalUpdate {
   target_date?: string; // ISO date
   status?: GoalStatus;
   context_tags?: string[];
-  constraints?: Record<string, unknown>;
+  constraints?: Record<string, any>;
 }
 
 export interface GoalView {
@@ -291,7 +291,7 @@ export interface GoalView {
   target_date?: string;
   status: GoalStatus;
   context_tags: string[];
-  constraints: Record<string, unknown>;
+  constraints: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
@@ -319,7 +319,7 @@ export interface GoalTask {
   requester_did: string;
   requester_person_id: string;
   context_tags: string[];
-  constraints: Record<string, unknown>;
+  constraints: Record<string, any>;
 }
 
 export interface GoalTaskResponse {
@@ -360,7 +360,7 @@ export interface AgentInteractionSummary {
 export interface AgentCredentialView {
   type: string[];
   issuer_did?: string;
-  claims: Record<string, unknown>;
+  claims: Record<string, any>;
   issued_at?: string;
   expires_at?: string;
 }
@@ -403,7 +403,7 @@ export interface AgentChatResponse {
   agent_name: string;
   profile?: DIDAgentProfile;
   response_message: AgentChatMessage;
-  usage?: Record<string, unknown>;
+  usage?: Record<string, any>;
 }
 
 // ============================================================
@@ -432,7 +432,7 @@ export interface ProcessCreate {
   owner_person_id: string;
   goal_id: string;
   process_type: ProcessType;
-  initial_state?: Record<string, unknown>;
+  initial_state?: Record<string, any>;
 }
 
 export interface ProcessView {
@@ -441,14 +441,14 @@ export interface ProcessView {
   goal_id: string;
   process_type: ProcessType;
   status: ProcessStatus;
-  state_json: Record<string, unknown>;
+  state_json: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
 
 export interface ProcessUpdate {
   status?: ProcessStatus;
-  state_json?: Record<string, unknown>;
+  state_json?: Record<string, any>;
 }
 
 export interface ProcessListResponse {
@@ -464,8 +464,8 @@ export interface ProcessStepView {
   step_type: string;
   status: StepStatus;
   microagent_type: MicroagentType;
-  input_state: Record<string, unknown>;
-  output_state?: Record<string, unknown>;
+  input_state: Record<string, any>;
+  output_state?: Record<string, any>;
   attempt_count: number;
   error_count: number;
   needs_consensus: boolean;
@@ -477,7 +477,7 @@ export interface ProcessStepCreate {
   process_id: string;
   step_type: string;
   microagent_type: MicroagentType;
-  input_state: Record<string, unknown>;
+  input_state: Record<string, any>;
   needs_consensus?: boolean;
 }
 
@@ -490,7 +490,7 @@ export interface ProcessExecutionResponse {
   step: ProcessStepView;
   execution_status: "success" | "failed" | "skipped";
   error_message?: string;
-  output_state?: Record<string, unknown>;
+  output_state?: Record<string, any>;
 }
 
 export interface ProcessDetailResponse extends ProcessView {
@@ -628,7 +628,7 @@ export interface OpportunityMatch {
 
 export interface ChannelBase {
   name: string;
-  channel_metadata?: Record<string, unknown>;
+  channel_metadata?: Record<string, any>;
 }
 
 export interface ChannelCreate extends ChannelBase {
@@ -637,7 +637,7 @@ export interface ChannelCreate extends ChannelBase {
 
 export interface ChannelUpdate {
   name?: string;
-  channel_metadata?: Record<string, unknown>;
+  channel_metadata?: Record<string, any>;
 }
 
 export interface ChannelRead extends ChannelBase {
@@ -727,7 +727,6 @@ export interface ContextTagBase {
 
 export interface ContextTagCreate extends ContextTagBase {
   owner_id: string;
-  // Ensure we match update type if necessary
 }
 
 export interface ContextTagUpdate {
@@ -768,7 +767,7 @@ export interface CustomAttributeBase {
   entity_type: string;
   entity_id: string;
   attribute_key: string;
-  attribute_value: string | number | boolean | Record<string, unknown> | unknown[];
+  attribute_value: string | number | boolean | Record<string, any> | any[];
   value_type: CustomAttributeValueType;
 }
 
@@ -777,7 +776,7 @@ export interface CustomAttributeCreate extends CustomAttributeBase {
 }
 
 export interface CustomAttributeUpdate {
-  attribute_value?: string | number | boolean | Record<string, unknown> | unknown[];
+  attribute_value?: string | number | boolean | Record<string, any> | any[];
   value_type?: CustomAttributeValueType;
 }
 
@@ -812,7 +811,7 @@ export interface CustomAttributesQueryParams {
 export interface ZKVerificationKeyCreate {
   owner_id: string;
   name: string;
-  verification_key: Record<string, unknown>;
+  verification_key: Record<string, any>;
   description?: string;
   circuit_type?: string;
   version?: string;
@@ -822,7 +821,7 @@ export interface ZKVerificationKeyRead {
   vk_id: string;
   owner_id: string;
   name: string;
-  verification_key: Record<string, unknown>;
+  verification_key: Record<string, any>;
   description?: string;
   circuit_type: string;
   version: string;
@@ -832,7 +831,7 @@ export interface ZKVerificationKeyRead {
 }
 
 export interface ZKProofVerifyRequest {
-  proof: Record<string, unknown>;
+  proof: Record<string, any>;
   public_signals: string[];
   vk_id?: string;
   vk_name?: string;
