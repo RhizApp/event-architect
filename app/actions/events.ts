@@ -203,6 +203,8 @@ export async function updateEventConfig(
                 id: s.id || crypto.randomUUID(), // Ensure ID exists
                 startTime: new Date(s.startTime),
                 endTime: new Date(s.endTime),
+                format: s.format || "presentation", // Default format
+                speakers: s.speakers || [], 
             })) || current.config.content?.schedule,
         },
         branding: {
