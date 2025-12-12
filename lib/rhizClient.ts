@@ -217,15 +217,13 @@ export const rhizClient = {
     limit?: number;
   }): Promise<OpportunityMatch[]> => {
     try {
-      // Delegate to the Protocol's NLP Engine
+      // Delegate to the Protocol's NLP Engine (currently mocked)
       return await withTimeout(
-        nlpClient.findOpportunityMatches({
-          personId: args.identityId,
-          limit: args.limit
-        }),
+        nlpClient.findOpportunityMatches(),
         5000,
         "Opportunity match fetch timed out"
       );
+
     } catch (error) {
       console.warn("Rhiz: Failed to get opportunity matches", error);
       return [];

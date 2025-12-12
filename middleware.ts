@@ -6,9 +6,10 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)", 
   "/demo(.*)",
   "/",
-  // "/create" is now protected
+  "/create(.*)",  // Allow viewing, auth required on form submit
   "/e(.*)"
 ]);
+
 
 export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {

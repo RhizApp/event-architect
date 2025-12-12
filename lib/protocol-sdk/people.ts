@@ -8,11 +8,11 @@ import {
   PersonUpdate,
   PersonListResponse,
   PersonBulkResponse,
-  PersonBulkResponse,
   OrganizationMembershipCreate,
   OrganizationMembershipRead,
   PeopleQueryParams,
 } from './types';
+
 
 // Re-export for convenience
 export type { PersonCreate };
